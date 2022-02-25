@@ -28,6 +28,7 @@ Created on 29.03.2018
 #include <opencv2/imgcodecs/imgcodecs_c.h>
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -135,9 +136,9 @@ int main() {
     //evaluateParameterSweep();
 
     // set constants in function!
-    //evaluateSingleRun();
+    evaluateSingleRun();
 
-    //testFlow(false);
+    // testFlow(true);
     return 0;
 }
 
@@ -306,7 +307,7 @@ void evaluateSingleRun() {
     const bool use_acceleration_mode = false; // true if const acceleration assumption should be used instead of constant velocity
     const bool use_refinement = true; // true if the nonlinear refinement should be used
     bool use_deep_flow = false; // true if Deep Flow should be used instead of Ground Truth Flow
-    const bool use_synthetic_data = true; // true if synthetic data is used (might override used flow method)
+    const bool use_synthetic_data = false; // true if synthetic data is used (might override used flow method)
     const double ransac_tol = 0.05;  // RANSAC threshold
     const double flow_threshold = 1e-10; // flow threshold values below are set to zero
 
@@ -316,9 +317,9 @@ void evaluateSingleRun() {
     // Synthetic data
     // -----------------------------------------------
     // Example 1:
-    std::string data_path = "../../examples/synthetic/example1/";
-    Camera camera = setupCameraSynthetic(data_path+"test__v=[0.03;0.03;0]_w=[0;0;0.5]_k=0_gamma=0.8/images/",true);
-    double gamma = 0.8;
+//    std::string data_path = "../../examples/synthetic/example1/";
+//    Camera camera = setupCameraSynthetic(data_path+"test__v=[0.03;0.03;0]_w=[0;0;0.5]_k=0_gamma=0.8/images/",true);
+//    double gamma = 0.8;
     // Example 2:
 //    std::string data_path = "../../examples/synthetic/example2/";
 //    Camera camera = setupCameraSynthetic(data_path+"test__v=[0.01;0.01;0]_w=[0;0;0.5]_k=0_gamma=0.8/images/",true);
@@ -356,9 +357,29 @@ void evaluateSingleRun() {
 //    Camera camera = setupCameraReal(data_path, "galaxy_stabil");
 //    double gamma = 0.95;
     // Example 5:
-//    std::string data_path = "../../examples/real_world/example5/";
-//    Camera camera = setupCameraReal(data_path, "galaxy");
+//   std::string data_path = "../../examples/real_world/example5/";
+//   Camera camera = setupCameraReal(data_path, "galaxy");
+//   double gamma = 0.95;
+    // Example 6:
+//    std::string data_path = "../../examples/real_world/example6/";
+//    Camera camera = setupCameraReal(data_path, "gimpo_220126_rolling");
 //    double gamma = 0.95;
+    // Example 7:
+//    std::string data_path = "../../examples/real_world/example7/";
+//    Camera camera = setupCameraReal(data_path, "gimpo_220126_rolling_1/8");
+//    double gamma = 0.95;
+    // Example 8:
+//    std::string data_path = "../../examples/real_world/example8/";
+//    Camera camera = setupCameraReal(data_path, "sangdo_211213_rolling");
+//    double gamma = 0.95;
+    // Example 9:
+//    std::string data_path = "../../examples/real_world/example9/";
+//    Camera camera = setupCameraReal(data_path, "sangdo_211213_rolling_1/4");
+//    double gamma = 0.95;    
+    // Example 10:
+   std::string data_path = "../../examples/real_world/example10/";
+   Camera camera = setupCameraReal(data_path, "sangdo_210330_rolling_1/8");
+   double gamma = 0.95;
 
 
     camera.setGamma(gamma);
@@ -383,6 +404,9 @@ void evaluateSingleRun() {
         flow_image = camera.calculateTrueFlow(1,2);
     }
 
+    cout << "flow_image\n" << flow_image << endl << endl;
+
+
     // save flow image
     std::vector<int> compression_params;
     compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
@@ -398,6 +422,10 @@ void evaluateSingleRun() {
     // calculate the (flattened) coordinates and flatten the flow
     int rows = flow_image.rows;
     int cols = flow_image.cols;
+
+    cout << endl << "flow_image.rows: " << rows << endl;
+    cout << "flow_image.cols: " << cols << endl;
+
     Eigen::Matrix2Xd coord = Eigen::Matrix2Xd::Ones(2, rows * cols);
     Eigen::Matrix2Xd coord_pixel = Eigen::Matrix2Xd::Ones(2, rows * cols);
     Eigen::Matrix2Xd flow = Eigen::Matrix2Xd::Zero(2, rows * cols);
@@ -430,9 +458,11 @@ void evaluateSingleRun() {
             }
         }
     }
-    cout << endl << "coordinate columns: " << coord.cols() << endl;
+    cout << "coordinate columns: " << coord.cols() << endl;
     cout << "flow columns: " << flow.cols() << endl << endl;
 
+    // cout << "coord_pixel\n" << coord_pixel << endl << endl;
+    // cout << "flow_pixel\n" << flow_pixel << endl << endl;
     // calculate beta values
     ArrayXd alpha = minimal::getAlpha(flow_pixel, rows, gamma);
     ArrayXd alphaK = minimal::getAlphaK(coord_pixel, flow_pixel, rows, gamma);
@@ -443,6 +473,8 @@ void evaluateSingleRun() {
         alpha += 1;
     }
 
+    // cout << "coord\n" << coord << endl << endl;
+    // cout << "flow\n" << flow<< endl << endl;
     // run ransac
     RansacValues ransac_results = minimal::ransac(coord, flow, alpha, alphaK, use_acceleration_mode, ransac_trials, ransac_tol, true);
     cout << endl << "ransac numInliers: " << ransac_results.num_inliers << endl;
@@ -460,7 +492,6 @@ void evaluateSingleRun() {
     cout << "ransac w: " << results.w.transpose() << endl;
     cout << "ransac v: " << results.v.transpose() << endl;
     cout << "ransac k: " << results.k << endl;
-
 
 
     // flip sign of z and v values if average depth is negative
@@ -481,18 +512,25 @@ void evaluateSingleRun() {
     // get min and max depth value (needed for depth image)
     double z_min = INFINITY;
     double z_max = 0;
-    for (int i=0; i< results.num_inliers; ++i) {
-        if (results.inliers(2,i) < z_min) {
-            z_min =  results.inliers(2,i);
-        }
-        if (results.inliers(2,i) > z_max) {
-            z_max =  results.inliers(2,i);
-        }
-    }
+    // for (int i=0; i< results.num_inliers; ++i) {
+    //     cout << "inliers z: " << results.inliers(2,i) << endl;
+    //     if (results.inliers(2,i) < z_min) {
+    //         z_min =  results.inliers(2,i);
+    //     }
+    //     if (results.inliers(2,i) > z_max) {
+    //         z_max =  results.inliers(2,i);
+    //     }
+    // }
 
+
+    // min max manually insert
+    z_min = 10;
+    z_max = 300;
+    cout << "z_min: " << z_min << endl;
+    cout << "z_max: " << z_max << endl; 
 
     // set depth map (effective value) and depth image (scaled between min and max depth value)
-    const int min_z_value = 10;
+    const int min_z_value = 10; // this is minimum depth map pixel value
     double multiplier = 244.0 / (z_max-z_min);
     Mat depth_est(rows, cols, CV_8UC1, cv::Scalar(0));
     Eigen::MatrixXd depth_map = Eigen::MatrixXd::Zero(rows, cols);
@@ -504,6 +542,7 @@ void evaluateSingleRun() {
         if (z > 255) {
             cout << "Warning: Saturated pixel for z of size " << z << endl;
         }
+        cout << "depth map z: " << z << endl;
         depth_est.at<uchar>(cv::Point_<double>(x, y)) = z;
         depth_map(y, x) = results.inliers(2, i);
     }
@@ -521,11 +560,19 @@ void evaluateSingleRun() {
         camera.backProject(1);
     }
     Mat backprojection = camera.interpolateCrackyImage(camera.getFrame(1).getGsImage(), 1);
+    
+    // Restore resized backprojection image -- use only resized frames
+    // cv::imwrite(data_path + "backprojection.png", backprojection, compression_params);
+    // Mat backprojection_image = cv::imread(data_path + "backprojection.png");
+    // Mat restore_backprojection;
+    // cv::resize(backprojection_image, restore_backprojection, cv::Size(backprojection_image.cols*8, backprojection_image.rows*8));
+    // backprojection = restore_backprojection;
 
     // save point cloud
     camera.createPointCloud(1, data_path + "point_cloud.ply");
 
     // save depth image, RS image and backprojection
+    // cv::imwrite(data_path + "DepthMap.png", depth_map, compression_params);
     cv::imwrite(data_path + "MinimalDepth.png", depth_est, compression_params);
     cv::imwrite(data_path + "rs_image.png", camera.getFrame(1).getRsImage().clone(), compression_params);
     cv::imwrite(data_path + "backprojection.png", backprojection, compression_params);
@@ -674,12 +721,31 @@ Camera setupCameraSynthetic(std::string data_prefix, bool show_messages) {
 // setup camera for real world images
 Camera setupCameraReal(std::string data_prefix, std::string intrinsic_selection) {
     // Frame 1
-    std::string path_rs_image_1 = data_prefix + "frame1.png";
-    Mat rs_image_1 = cv::imread(path_rs_image_1.c_str(), CV_LOAD_IMAGE_COLOR);
+    // std::string path_rs_image_1 = data_prefix + "frame1.png";
+    // std::string path_rs_image_1 = data_prefix + "frame1.JPG";
+    // Mat rs_image_1 = cv::imread(path_rs_image_1.c_str(), CV_LOAD_IMAGE_COLOR);
 
     // Frame 2
-    std::string path_rs_image_2= data_prefix + "frame2.png";
-    Mat rs_image_2 = cv::imread(path_rs_image_2.c_str(), CV_LOAD_IMAGE_COLOR);
+    // std::string path_rs_image_2= data_prefix + "frame2.png";
+    // std::string path_rs_image_2= data_prefix + "frame2.JPG";
+    // Mat rs_image_2 = cv::imread(path_rs_image_2.c_str(), CV_LOAD_IMAGE_COLOR);
+
+    // Resize version -- check denominator
+    std::string path_rs_image_1 = data_prefix + "frame1.JPG";
+    Mat original_image_1, resized_image_1;
+    original_image_1 = cv::imread(path_rs_image_1.c_str(), CV_LOAD_IMAGE_COLOR);
+    cv::resize(original_image_1, resized_image_1, cv::Size(original_image_1.cols/8, original_image_1.rows/8));
+    cv::imwrite(data_prefix + "resize1.JPG", resized_image_1);
+    std::string path_resize_image_1 = data_prefix + "resize1.JPG";
+    Mat rs_image_1 = cv::imread(path_resize_image_1, CV_LOAD_IMAGE_COLOR);
+
+    std::string path_rs_image_2= data_prefix + "frame2.JPG";
+    Mat original_image_2, resized_image_2;
+    original_image_2 = cv::imread(path_rs_image_2.c_str(), CV_LOAD_IMAGE_COLOR);
+    cv::resize(original_image_2, resized_image_2, cv::Size(original_image_2.cols/8, original_image_2.rows/8));
+    cv::imwrite(data_prefix + "resize2.JPG", resized_image_2);
+    std::string path_resize_image_2 = data_prefix + "resize2.JPG";
+    Mat rs_image_2 = cv::imread(path_resize_image_2, CV_LOAD_IMAGE_COLOR);
 
     Camera camera;
     camera.setIntrinsics(intrinsic_selection);

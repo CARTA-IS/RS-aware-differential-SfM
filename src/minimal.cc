@@ -40,9 +40,11 @@ namespace minimal {
         const double TOL_IMAG = 0.00001; // tolerance of the imaginary part of k
         // initialize variables
         int n = q.cols();
+
         double k = 0;
         Eigen::ArrayXd beta = Eigen::ArrayXd::Ones(n);
         Eigen::ArrayXXd z = Eigen::ArrayXXd::Ones(n, 9);
+        std::cout << "z\n" << z << std::endl;
         // calculate Z
         z.col(0) = -u.row(1);
         z.col(1) = u.row(0);
@@ -52,6 +54,7 @@ namespace minimal {
         z.col(5) = 2.0 * q.row(0);
         z.col(6) = q.row(1) * q.row(1);
         z.col(7) = 2 * q.row(1);
+        std::cout << "calculated_z\n" << z << std::endl;
         if (use_alpha_k) {
             // The following code estimates k from det(Z(k)) = 0. The Problem is reduced to an eigenvalue decomposition
             // build p matrix
@@ -93,7 +96,7 @@ namespace minimal {
         z.col(7) *= beta;
         z.col(8) *= beta;
         z.matrix();
-
+        std::cout << "complete_z\n" << z << std::endl;
         // calculate normalized vector e (Step 1)
         Eigen::JacobiSVD<MatrixZ> svd(z, Eigen::ComputeFullV);
         Eigen::MatrixXd v_e = svd.matrixV();
@@ -236,6 +239,7 @@ namespace minimal {
                 int random_choice = rand() % n_temp;
                 std::swap(indices[n_temp - 1], indices[random_choice]);
                 int index = indices[n_temp - 1];
+                std::cout << "random index: " << index << std::endl;
                 n_temp--; // do not reuse the element that was swaped previously
                 choice_q.col(j) = q.col(index);
                 choice_u.col(j) = u.col(index);
@@ -243,8 +247,16 @@ namespace minimal {
                 choice_alpha_k(j) = alpha_k(index);
             }
 
+            std::cout << "choice_q\n" << choice_q << std::endl << std::endl;
+            std::cout << "choice_u\n" << choice_u << std::endl;
+
             // fit the Velocities
             Velocities vel = calculateVelocities(choice_q, choice_u, choice_alpha, choice_alpha_k, use_alpha_k);
+
+            std::cout << "velocity w\n" << vel.w << std::endl;
+            std::cout << "velocity v\n" << vel.v << std::endl;
+            std::cout << "velocity k\n" << vel.k << std::endl;
+
             // find the inliers
             std::vector<bool> inliers(n);
             int num_inliers = 0;
@@ -252,6 +264,9 @@ namespace minimal {
             // calculate the inverse depth
             std::vector<double> betas(n);
             inv_depth = nonlinear_refinement::estimateInverseDepths(q, u, vel.v, vel.w, vel.k, alpha, alpha_k, show_messages);
+
+            // std::cout << "inv_depth\n" << inv_depth << std::endl;
+
             for (int j = 0; j < n; j++) {
                 // calculate the optical flow given w and v
                 double x = q(0, j);

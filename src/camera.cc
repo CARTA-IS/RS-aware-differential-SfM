@@ -29,6 +29,7 @@ Created on 29.03.2018
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include "CustomDeepFlow.hpp"
 
 // return camera intrinsics
 Eigen::Matrix3d Camera::getIntrinsics() {
@@ -198,6 +199,26 @@ void Camera::setIntrinsics(const std::string source_camera) {
         intrinsics << 484.450845764569, 0,  313.442094604855,
                 0, 485.345469134313, 241.383116350144,
                 0, 0, 1;
+    } else if (source_camera == "sangdo_211213_rolling") { // sangdo_211213_rolling camera intrinsic parameter's initial values
+        intrinsics << 2742.856, 0,  1999.999,
+                0, 2742.856, 1500,
+                0, 0, 1;
+    } else if (source_camera == "sangdo_211213_rolling_1/4") { // sangdo_211213_rolling_1/4 camera intrinsic parameter's initial values
+        intrinsics << 685.714, 0,  500,
+                0, 685.714, 375,
+                0, 0, 1;
+    } else if (source_camera == "sangdo_210330_rolling_1/8") { // sangdo_211213_rolling_1/4 camera intrinsic parameter's initial values
+        intrinsics << 342.857, 0,  250,
+                0, 342.857, 187.5,
+                0, 0, 1;
+    } else if (source_camera == "gimpo_220126_rolling") { // gimpo_220126_rolling intrinsic parameter's initial values
+        intrinsics << 4266.500, 0,  2734.560,
+                0, 4266.500, 1863.770,
+                0, 0, 1;
+    } else if (source_camera == "gimpo_220126_rolling_1/8") { // gimpo_220126_rolling_1/8 intrinsic parameter's initial values
+        intrinsics << 533.3125, 0,  341.82,
+                0, 533.3125, 232.97125,
+                0, 0, 1;
     } else {
         std::cerr << "No valid source camera specified";
     }
@@ -266,7 +287,12 @@ cv::Mat_<cv::Point_<double>> Camera::calculateDeepFlow(const int frameNr1, const
     cv::cvtColor(this->getFrame(2).getRsImage(), gray_f2, cv::COLOR_BGR2GRAY);
 
     // Use DeepFlow method to get flow
-    cv::Ptr<cv::DenseOpticalFlow> dfl = cv::optflow::createOptFlow_DeepFlow();
+    // cv::Ptr<cv::DenseOpticalFlow> dfl = cv::optflow::createOptFlow_DeepFlow();
+    // cv::Ptr<cv::DenseOpticalFlow> dfl = cv::optflow::createOptFlow_CustomDeepFlow();
+    // cv::Ptr<cv::optflow::CustomOpticalFlowDeepFlow> dfl = cv::optflow::createCustomDeepFlow();
+    cv::Ptr<cv::optflow::OpticalFlowDeepFlow> dfl = cv::optflow::createDeepFlow();
+    // dfl->setSigma(0.1f);
+    // dfl->setMinSize(40);
     dfl->calc(gray_f1, gray_f2, uflow);
 
     // create color flow image
