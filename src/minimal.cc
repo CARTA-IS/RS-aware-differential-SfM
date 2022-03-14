@@ -59,8 +59,10 @@ namespace minimal {
             // The following code estimates k from det(Z(k)) = 0. The Problem is reduced to an eigenvalue decomposition
             // build p matrix
             Eigen::MatrixXd a = z.block(0, 0, 3, 3);
+            std::cout << "a\n" << a << std::endl;
             Eigen::MatrixXd a_inv = a.inverse();
             Eigen::MatrixXd efhj = z.block(3,3,6,6); // [E, F; H, J]
+            std::cout << "efhj\n" << efhj << std::endl;
             Eigen::MatrixXd dg = z.block(3, 0, 6, 3); // [D; G]
             Eigen::MatrixXd bc = z.block(0, 3, 3, 6); // [B, C]
             Eigen::Vector3d alpha_f3 = alpha.head(3); // first 3 entries of alpha
@@ -258,13 +260,21 @@ namespace minimal {
             std::cout << "velocity k\n" << vel.k << std::endl;
 
             // find the inliers
-            std::vector<bool> inliers(n);
+            std::vector<bool> inliers(n);            
             int num_inliers = 0;
             double inlier_error = 0;
             // calculate the inverse depth
             std::vector<double> betas(n);
-            inv_depth = nonlinear_refinement::estimateInverseDepths(q, u, vel.v, vel.w, vel.k, alpha, alpha_k, show_messages);
 
+            // skip depth value estimation
+            // inv_depth = nonlinear_refinement::estimateInverseDepths(q, u, vel.v, vel.w, vel.k, alpha, alpha_k, show_messages);
+            
+            //////////////////////////////////////////////////////////////
+            Eigen::ArrayXd inverse_depth = Eigen::ArrayXd::Zero(q.cols());
+            for (int i = 0; i < q.cols(); i++) {
+                inv_depth[i] = 0.01;
+            }
+            //////////////////////////////////////////////////////////////
             // std::cout << "inv_depth\n" << inv_depth << std::endl;
 
             for (int j = 0; j < n; j++) {
@@ -283,6 +293,10 @@ namespace minimal {
                 Eigen::Vector2d u_j = Eigen::Vector2d(u(0, j), u(1, j));
                 double error = (u_est - u_j).norm();
                 inliers[j] = (error < tolerance);
+                // std::cout << "error: " << error << std::endl;
+                // std::cout << "tolerance: " << tolerance << std::endl;
+                // std::cout << "inliers: " << inliers[j] << std::endl;
+
                 if (inliers[j]) {
                     num_inliers++;
                     inlier_error += error;

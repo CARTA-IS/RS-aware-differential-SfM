@@ -111,6 +111,7 @@ namespace nonlinear_refinement {
                                               const double& k, const Eigen::ArrayXd& alpha, const Eigen::ArrayXd& alphaK,
                                               bool show_messages) {
 
+        std::cout << "depth calculating start" << std::endl;
         double lin_vel_double[linear_velocity.size()];
         double ang_vel_double[angular_velocity.size()];
 
@@ -173,6 +174,7 @@ namespace nonlinear_refinement {
         for (int i=0; i< normalized_coordinates.cols(); ++i)
         {
             inverse_depth_array(i) = inverse_depth[i];
+            // std::cout << "inverse_depth: " << inverse_depth[i] << std::endl;
         }
         delete inverse_depth;
 
@@ -181,7 +183,7 @@ namespace nonlinear_refinement {
 
     // minimize geometric, reprojection error
     RansacValues nonLinearRefinement(const Eigen::Array2Xd &flow, const RansacValues &inliers, bool const_acceleration, bool show_messages) {
-
+        std::cout << "start nonLinearRefinement" <<std::endl;
         // extract variables from inlier set
         int num_inliers = inliers.num_inliers;
         Eigen::Vector3d linear_velocity  = inliers.v;

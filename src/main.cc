@@ -404,7 +404,7 @@ void evaluateSingleRun() {
         flow_image = camera.calculateTrueFlow(1,2);
     }
 
-    cout << "flow_image\n" << flow_image << endl << endl;
+    // cout << "flow_image\n" << flow_image << endl << endl;
 
 
     // save flow image
@@ -423,8 +423,8 @@ void evaluateSingleRun() {
     int rows = flow_image.rows;
     int cols = flow_image.cols;
 
-    cout << endl << "flow_image.rows: " << rows << endl;
-    cout << "flow_image.cols: " << cols << endl;
+    // cout << endl << "flow_image.rows: " << rows << endl;
+    // cout << "flow_image.cols: " << cols << endl;
 
     Eigen::Matrix2Xd coord = Eigen::Matrix2Xd::Ones(2, rows * cols);
     Eigen::Matrix2Xd coord_pixel = Eigen::Matrix2Xd::Ones(2, rows * cols);
@@ -463,6 +463,7 @@ void evaluateSingleRun() {
 
     // cout << "coord_pixel\n" << coord_pixel << endl << endl;
     // cout << "flow_pixel\n" << flow_pixel << endl << endl;
+
     // calculate beta values
     ArrayXd alpha = minimal::getAlpha(flow_pixel, rows, gamma);
     ArrayXd alphaK = minimal::getAlphaK(coord_pixel, flow_pixel, rows, gamma);
@@ -475,6 +476,7 @@ void evaluateSingleRun() {
 
     // cout << "coord\n" << coord << endl << endl;
     // cout << "flow\n" << flow<< endl << endl;
+
     // run ransac
     RansacValues ransac_results = minimal::ransac(coord, flow, alpha, alphaK, use_acceleration_mode, ransac_trials, ransac_tol, true);
     cout << endl << "ransac numInliers: " << ransac_results.num_inliers << endl;
@@ -523,11 +525,10 @@ void evaluateSingleRun() {
     // }
 
 
-    // min max manually insert
+    // min max value manually insert
     z_min = 10;
     z_max = 300;
-    cout << "z_min: " << z_min << endl;
-    cout << "z_max: " << z_max << endl; 
+    ////////////////////////////
 
     // set depth map (effective value) and depth image (scaled between min and max depth value)
     const int min_z_value = 10; // this is minimum depth map pixel value
@@ -539,10 +540,11 @@ void evaluateSingleRun() {
         int x = int(f_x*results.inliers(0,i) + c_x + 0.5);
         int y = int(f_y*results.inliers(1,i) + c_y + 0.5);
         int z = min_z_value + int((results.inliers(2, i) - z_min) * multiplier);
+        // int z = int(results.inliers(2, i));
         if (z > 255) {
             cout << "Warning: Saturated pixel for z of size " << z << endl;
         }
-        cout << "depth map z: " << z << endl;
+        cout << "depth map z: " << z;
         depth_est.at<uchar>(cv::Point_<double>(x, y)) = z;
         depth_map(y, x) = results.inliers(2, i);
     }
