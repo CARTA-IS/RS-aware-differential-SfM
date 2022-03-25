@@ -37,7 +37,7 @@ Created on 29.03.2018
 #include "nonlinearRefinement.h"
 #include "minimal.h"
 #include "errorMeasure.h"
-
+#include <stdlib.h>
 
 using Eigen::MatrixXd;
 using Eigen::Vector2d;
@@ -404,8 +404,10 @@ void evaluateSingleRun() {
         flow_image = camera.calculateTrueFlow(1,2);
     }
 
-    cout << "flow_image\n" << flow_image << endl << endl;
-
+    // cout << "flow_image\n" << flow_image << endl << endl;
+    cv::FileStorage file("flow_image.xml", cv::FileStorage::WRITE);
+    file << "flow_image" << flow_image;
+    file.release();
 
     // save flow image
     std::vector<int> compression_params;
@@ -413,9 +415,18 @@ void evaluateSingleRun() {
     compression_params.push_back(0);
     cv::Mat flow_image_save = camera.getImageOpticalFlow(flow_image);
     flow_image_save.convertTo(flow_image_save, CV_8UC3, 255.0);
+    // cout << "flow_image_save\n" << flow_image_save << endl << endl;
+    cv::FileStorage file2("flow_image_save.xml", cv::FileStorage::WRITE);
+    file2 << "flow_image_save" << flow_image_save;
+    file2.release();
     cv::imwrite(data_path + "optical_flow.png", flow_image_save, compression_params);
     cv::Mat flow_image_arrow = camera.flowArrows(camera.getFrame(1).getRsImage().clone(), flow_image, 50, 50);
+    // cout << "flow_image_arrow\n" << flow_image_arrow << endl << endl;
+    cv::FileStorage file3("flow_image_arrow.xml", cv::FileStorage::WRITE);
+    file3 << "flow_image_arrow" << flow_image_arrow;
+    file3.release();
     cv::imwrite(data_path + "optical_flow_arrow.png", flow_image_arrow, compression_params);
+    exit(0);
 
 
 

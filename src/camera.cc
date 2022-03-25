@@ -306,7 +306,11 @@ cv::Mat_<cv::Point_<double>> Camera::calculateDeepFlow(const int frameNr1, const
 cv::Mat Camera::getImageOpticalFlow(cv::Mat_<cv::Point_<double>> flow) {
     cv::Mat float_flow;
     flow.convertTo(float_flow, CV_32F);
-
+    // std::cout << "float_flow\n" << float_flow << std::endl;
+    cv::FileStorage file("float_flow.xml", cv::FileStorage::WRITE);
+    file << "float_flow" << float_flow;
+    file.release();
+    
     //extract x and y channels
     cv::Mat xy[2]; // X,Y
     cv::split(float_flow, xy);
@@ -330,6 +334,10 @@ cv::Mat Camera::getImageOpticalFlow(cv::Mat_<cv::Point_<double>> flow) {
     //convert to BGR and show
     cv::Mat bgr;//CV_32FC3 matrix
     cv::cvtColor(hsv, bgr, cv::COLOR_HSV2BGR);
+    // std::cout << "bgr\n" << bgr << std::endl;
+    cv::FileStorage file2("bgr.xml", cv::FileStorage::WRITE);
+    file2 << "bgr" << bgr;
+    file2.release();
 
     return bgr;
 }
@@ -344,6 +352,7 @@ cv::Mat Camera::flowArrows(const cv::Mat image, const cv::Mat_<cv::Point_<double
 
             // get length of flow
             double l = sqrt(dx*dx + dy*dy);
+            // std::cout << "x, y, dx, dy, length\n" << x << " " << y << " " << dx << " " << dy << " " << l << std::endl;
 
             cv::Point p = cv::Point(x, y);
             if (l > 0)

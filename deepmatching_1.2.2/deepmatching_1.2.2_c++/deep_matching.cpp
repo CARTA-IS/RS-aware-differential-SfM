@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "std.h"
 #include "conv.h"
 #include "maxfilter.h"
-
+#include <iostream>
 
 
 // return size of atomic patches
@@ -41,12 +41,13 @@ void extract_image_desc( image_t* img0, image_t* img1, const dm_params_t* params
 {
     // slightly reduce img0 size to fit the patch tiling
     int patch_size = get_atomic_patch_size( params );
-    
+
     int size[2]; // = {width, height}
     get_source_shape( img0->width, img0->height, patch_size, size );
     image_crop(img0, size[0], size[1]);
     
     // extract gradient-based information
+    std::cout << "right before segmentation fault" << std::endl;
     *desc0 = extract_desc( img0, &params->desc_params, params->n_thread );
     *desc1 = extract_desc( img1, &params->desc_params, params->n_thread );
 }
@@ -678,6 +679,8 @@ void set_default_dm_params( dm_params_t* params )
 // main function
 float_image* deep_matching( image_t* img0, image_t* img1, const dm_params_t* params, full_corres_t* corres_out )
 {
+  // std::cout << "default prior_img_downscale: " << params->prior_img_downscale << std::endl;
+  std::cout << "start deep matching" << std::endl;
   // verify parameters
   assert(between(0,params->prior_img_downscale,3));
   assert(between(0,params->overlap,999));
@@ -690,9 +693,10 @@ float_image* deep_matching( image_t* img0, image_t* img1, const dm_params_t* par
   assert(between(0,params->scoring_mode,1));
   assert(between(0,params->verbose,10));
   assert(between(1,params->n_thread,128));
-  
+
   // extract pixel descriptors
   float_layers *source, *target;
+  std::cout << "extract_image_desc has seg fault" << std::endl;
   extract_image_desc( img0, img1, params, &source, &target );
   if( corres_out )  // the first image is rotated
     source = rotate45( source, params, corres_out );
@@ -700,7 +704,7 @@ float_image* deep_matching( image_t* img0, image_t* img1, const dm_params_t* par
   assert( LAYERS_SIZE(source) > 0 );
   int target_shape[2] = {target->tx, target->ty};
   assert( LAYERS_SIZE(target) > 0 );
-  
+
   //hash_layers(source)
   //hash_layers(target)
   
@@ -709,12 +713,12 @@ float_image* deep_matching( image_t* img0, image_t* img1, const dm_params_t* par
   compute_matching_pyr( source, target, params, matching_pyr );
   free_layers(source);
   free_layers(target);
-  
+
   //hash_layers(&matching_pyr[matching_pyr.size()-1].res_map);
   
   // find optmial matchings (maxima)
   int_image* maxima = find_optimal_matchings(matching_pyr, params);
-  
+
   //hash_image(maxima);
   
   // select the best displacements (maxpool merge)
