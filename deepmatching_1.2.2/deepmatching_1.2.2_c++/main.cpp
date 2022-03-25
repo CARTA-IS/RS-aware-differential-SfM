@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "deep_matching.h"
 #include "main.h"
 #include <thread>
+#include <iostream>
 
 void usage(const int language)
 {
@@ -149,8 +150,10 @@ const char *parse_options(dm_params_t *params, scalerot_params_t *sr_params, boo
       params->desc_params.post_smoothing = 1;
       params->desc_params.ninth_dim = 0.3; } // higher ninth_dim because of pixel noise
   // matching parameters
-    else if(isarg("-R") || isarg("-downscale"))
+    else if(isarg("-R") || isarg("-downscale")) {
       params->prior_img_downscale = atoi(argv[current_arg++]);
+      std::cout << "prior_img_downscale: " << params->prior_img_downscale << std::endl;
+    }
   //else if(isarg("-overlap"))
   //  params->overlap = atoi(argv[current_arg++]);
   //else if(isarg("-subref"))
@@ -211,8 +214,15 @@ const char *parse_options(dm_params_t *params, scalerot_params_t *sr_params, boo
       assert((*im1)->width==(*im2)->width && (*im1)->height==(*im2)->height);
       int width = atoi(argv[current_arg++]);
       int height = atoi(argv[current_arg++]);
+      std::cout << "resize width: " << width << std::endl;
+      std::cout << "resize height: " << height << std::endl;
+
+      std::cout << "(*im1)->width: " << (*im1)->width << std::endl;
+      std::cout << "float(width): " << float(width) << std::endl;
       *fx *= (*im1)->width / float(width);
       *fy *= (*im1)->height / float(height);
+      std::cout << "fx: " << *fx << std::endl;
+
       *im1 = rescale_image(*im1, width, height);
       *im2 = rescale_image(*im2, width, height); }
     else if(isarg("-v"))
@@ -244,7 +254,6 @@ const char *parse_options(dm_params_t *params, scalerot_params_t *sr_params, boo
 int main(int argc, const char ** argv)
 {
   if( argc<=2 || !strcmp(argv[1],"-h") || !strcmp(argv[1],"--help") )  usage(EXE_OPTIONS); 
-  
   int current_arg = 3;
   image_t *im1=NULL, *im2=NULL;
   {
@@ -280,7 +289,7 @@ int main(int argc, const char ** argv)
   // parse options
   const char* out_filename = parse_options(&params, &sr_params, &use_scalerot, &fx, &fy, argc-current_arg, 
                                            &argv[current_arg], EXE_OPTIONS, &im1, &im2);
-  
+
   // compute deep matching
   float_image* corres = use_scalerot ? 
          deep_matching_scale_rot( im1, im2, &params, &sr_params ) : 

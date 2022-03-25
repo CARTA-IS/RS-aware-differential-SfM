@@ -16,6 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 #include "hog.h"
 #include "std.h"
+#include <iostream>
+#include <fstream>
 
 
 /* compute horizontal gradient centered with [-1,0,1] mask 
@@ -724,6 +726,7 @@ void subtract_mean_ori( float_layers* hog, float coef, int n_thread ) {
 void sigmoid_array( float_array* img, float coef, float offset, int n_thread ) {
   assert(coef>0);
   const int npix=img->tx;
+  std::cout << "npix: " << npix << std::endl;
 //  float* p = img->pixels;
 //  for(i=0; i<npix; i++) {
 //    float v = *p;
@@ -739,25 +742,46 @@ void sigmoid_array( float_array* img, float coef, float offset, int n_thread ) {
   for(l=1; l<=npc; l++) precom[l] = (precom[l]-precom[0]) / (1 - precom[0]);  // renorm between 0 and 1
   precom[0] = 0;
   const float maxindex = npc - 0.001;
-  
+  // std::cout << "next double for statement occurs segmentation fault" << std::endl;
+  // std::ofstream outfile;
+  // outfile.open("outfile.txt");
+
   #define NSUB 32
   #if defined(USE_OPENMP)
   #pragma omp parallel for num_threads(n_thread)
   #endif
+  
   for(l=0; l<NSUB; l++) {
     int start = (l*npix)/NSUB;
     int end = (l+1)*npix/NSUB;
     int npixsub = end-start;
     float* p = img->pixels + start;
     int i;
+    // std::cout << "img->pixels: " << *img->pixels << std::endl;
+    // std::cout << *p << std::endl;
+    // std::cout << "npixsub: " << npixsub << std::endl;
+    // std::cout << "l: " << l << std::endl;
+    // outfile << l << std::endl;
+
     for(i=0; i<npixsub; i++) {
+      // std::cout << "i: " << i << std::endl;
+      // outfile << " " << i << std::flush;
+
       float v = 8*(coef*(*p));
-      if(v>maxindex)  v=maxindex;
+      if(v > maxindex) v = maxindex;
       int n = int(v);
+      if(n > 64) {
+        std::cout << "n > 64 " << n << std::endl;
+        continue;
+      }
+        
       float w = v-n;
       *p++ = (1-w)*precom[n] + w*precom[n+1];
+      // std::cout << p << std::endl;
     }
+    // std::cout << *p << std::endl;
   }
+  // outfile.close();
 }
 
 
@@ -769,35 +793,4 @@ void smooth_hog_gaussian( float_layers* hog, float smoothing, int n_thread ) {
   for(l=0; l<hog->tz; l++)
     _smooth_gaussian_alltype(hog->tx,hog->ty,hog->pixels+l*npix,smoothing,hog->pixels+l*npix, n_thread);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

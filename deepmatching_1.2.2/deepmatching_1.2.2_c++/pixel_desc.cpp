@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "image.h"
 #include "hog.h"
 #include "conv.h"
+#include <iostream>
 
 
 /* convert a float image to a consecutive array
@@ -64,6 +65,7 @@ float_layers* extract_desc( image_t* _img, const desc_params_t* params, int nt )
   
   UBYTE_image* img = image_to_arraytype(_img);  // could be optimized but well
   const int npix = img->tx*img->ty;
+  std::cout << "npix: " << npix << " img tx: " << img->tx << " img ty: " << img->ty << std::endl;
   //hash_image(img)D(img->tx)D(img->ty)
   
   // pre-smooth image
@@ -71,7 +73,7 @@ float_layers* extract_desc( image_t* _img, const desc_params_t* params, int nt )
   if( params->presmooth_sigma>0 )
     _smooth_gaussian( img, params->presmooth_sigma, img, nt );
   //hash_image(img)
-  
+
   // extract HOG
   float_layers grad = {NEWA(float,npix*2),img->tx,img->ty,2};
   _compute_grad_101( img, 0, &grad, nt );
@@ -82,17 +84,19 @@ float_layers* extract_desc( image_t* _img, const desc_params_t* params, int nt )
   free(grad.pixels);
   free_image(img);
   //hash_layers(hog)
-  
+
   // mid smoothing
   assert( params->mid_smoothing>=0 );
   if( params->mid_smoothing )
     smooth_hog_gaussian( hog, params->mid_smoothing, nt );
   //hash_layers(hog)
-  
+
   // apply non-linearity
   assert( params->hog_sigmoid>=0 );
   if( params->hog_sigmoid ) {
     float_array hog_ravel = {hog->pixels,npix*hog->tz};
+    std::cout << "hog->pixels: " << *(hog->pixels) << " hog->tz: " << hog->tz << std::endl;
+    // std::cout << "inside sigmoid_array has seg fault" << std::endl;
     sigmoid_array( &hog_ravel, params->hog_sigmoid, 0, nt);
   }
   //hash_layers(hog)
@@ -102,7 +106,7 @@ float_layers* extract_desc( image_t* _img, const desc_params_t* params, int nt )
   if( params->post_smoothing )
     smooth_hog_gaussian( hog, params->post_smoothing, nt );
   //hash_layers(hog)
-  
+
   // add ninth dimension and normalize per-pixel
   float* ninth_layer = hog->pixels + hog->tz*npix;
   for(int i=0; i<npix; i++) 
