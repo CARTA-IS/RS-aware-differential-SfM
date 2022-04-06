@@ -4,11 +4,11 @@ import numpy as np
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-dir', type=str, default="resize_cheonan", 
+parser.add_argument('-name', type=str, required=True, 
                     help='img dir for optical flow visualization')
 args = parser.parse_args()
 
-def move_to_of(dir):
+def move_to_of(name):
     optical_flow = open("ofd.txt", "r")
     img_list = os.listdir(f'/home/dhlee/meissa/RS-aware-differential-SfM/deepmatching_1.2.2/deepmatching_1.2.2_c++/{dir}')
     for img in img_list:
@@ -26,4 +26,4 @@ def move_to_of(dir):
     optical_flow.close()
 
 if __name__=='__main__':
-    move_to_of(args.dir)
+    move_to_of(args.name)
