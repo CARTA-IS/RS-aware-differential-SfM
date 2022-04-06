@@ -6,10 +6,10 @@ from calc_angle import angle_to
 
 # bring output.txt to make (u,v)
 parser = argparse.ArgumentParser()
-parser.add_argument('-dir', type=str, default="resize_real", 
+parser.add_argument('-dir', type=str, default="resize_cheonan", 
                     help='img dir for optical flow visualization')
 parser.add_argument('-num_imgs', type=int, default=0,
-                    help='choose number of imgs used for visualization')                    
+                    help='number of imgs for visualization, 0 means every images in dir')                    
 args = parser.parse_args()
 
 # for one image
@@ -87,6 +87,7 @@ def multi_image_visual(dir, num_imgs):
     img_list.sort()
     if not num_imgs:
         num_imgs = len(img_list)
+    ofd = open(f"ofd.txt", "w")
     for i in range(num_imgs - 1):
         temp = img_list[i].replace("resize_", "")
         name = temp.replace(".JPG", "")
@@ -107,14 +108,17 @@ def multi_image_visual(dir, num_imgs):
                 temp.append(int(pixel))
                 count += 1
                 if count >= 4:
+                    # print(temp)
                     break
-            u += temp[2] - temp[0]
-            v += temp[3] - temp[1]
+        # This is camera direction which is opposite of optical flow
+            u += (temp[2] - temp[0])
+            v += (temp[3] - temp[1])
+            # u += (temp[0] - temp[2])
+            # v += (temp[1] - temp[3])
 
         u /= num_lines
         v /= num_lines
         output_file.close()
-        print(u, v)
 
         image = cv2.imread(f'/home/dhlee/meissa/RS-aware-differential-SfM/deepmatching_1.2.2/deepmatching_1.2.2_c++/{dir}/' + img_list[i])
         height, width, channels = image.shape
@@ -133,17 +137,21 @@ def multi_image_visual(dir, num_imgs):
             start_point = (width, 0)
             end_point = (width + int(u), -1*int(v))
 
-        direction = angle_to(start_point, (u,v))
-        print(direction)
+        # direction is opposite of optical flow
+        direction = angle_to((0,0), (u,v))
+        print(u, v, direction)
         lines = [str(u), str(v), str(direction)]
-        with open(f"of_{name}.txt", "w") as f:
-            f.write('\n'.join(lines))
+        # with open(f"of_{name}.txt", "w") as f:
+        #     f.write('\n'.join(lines))
+        ofd.write(f'{lines[0]} {lines[1]} {lines[2]}')
+        ofd.write('\n')
 
         color = (0, 255, 0)
         thickness = 9
         image = cv2.arrowedLine(image, start_point, end_point,
                                             color, thickness)
         cv2.imwrite(f'arrow_{name}.JPG', image)
+    ofd.close()
 
 if __name__=='__main__':
     multi_image_visual(args.dir, args.num_imgs)

@@ -8,12 +8,14 @@ def angle_to(p1, p2, rotation=0, clockwise=False):
     p2[1] = p2[1] - p1[1]
 
     angle = degrees(atan2(p2[1], p2[0]))
-    if clockwise:
-        angle -= rotation
-        return angle if angle > 0 else angle + 360
-    else:
-        angle = (360 - angle if angle > 0 else -1 * angle) - rotation
-        return angle if angle > 0 else angle + 360
+    # print(angle)
+    return angle if angle > 0 else angle + 360
+    # if clockwise:
+    #     angle -= rotation
+    #     return angle if angle > 0 else angle + 360
+    # else:
+    #     angle = (360 - angle if angle > 0 else -1 * angle) - rotation
+    #     return angle if angle > 0 else angle + 360
 
 def point_pos(origin, amplitude, angle, rotation=0, clockwise=False):
     if abs(rotation) > 360:
