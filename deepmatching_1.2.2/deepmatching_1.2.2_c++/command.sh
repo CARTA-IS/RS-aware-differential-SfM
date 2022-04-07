@@ -1,46 +1,51 @@
 #!/bin/bash
 
+# https://brownbears.tistory.com/220
+# https://m.blog.naver.com/PostView.naver?isHttpsRedirect=true&blogId=qbxlvnf11&logNo=221419256533
+# https://stackoverflow.com/questions/16153446/bash-last-index-of
 
-./deepmatching $PWD/resize_real/resize_100_0024_0001.JPG $PWD/resize_real/resize_100_0024_0002.JPG -nt 24 -out 100_0024_0001.txt
-./deepmatching $PWD/resize_real/resize_100_0024_0002.JPG $PWD/resize_real/resize_100_0024_0003.JPG -nt 24 -out 100_0024_0002.txt
-./deepmatching $PWD/resize_real/resize_100_0024_0003.JPG $PWD/resize_real/resize_100_0024_0004.JPG -nt 24 -out 100_0024_0003.txt
-./deepmatching $PWD/resize_real/resize_100_0024_0004.JPG $PWD/resize_real/resize_100_0024_0005.JPG -nt 24 -out 100_0024_0004.txt
-./deepmatching $PWD/resize_real/resize_100_0024_0005.JPG $PWD/resize_real/resize_100_0024_0006.JPG -nt 24 -out 100_0024_0005.txt
-./deepmatching $PWD/resize_real/resize_100_0024_0006.JPG $PWD/resize_real/resize_100_0024_0007.JPG -nt 24 -out 100_0024_0006.txt
-./deepmatching $PWD/resize_real/resize_100_0024_0007.JPG $PWD/resize_real/resize_100_0024_0008.JPG -nt 24 -out 100_0024_0007.txt
-./deepmatching $PWD/resize_real/resize_100_0024_0008.JPG $PWD/resize_real/resize_100_0024_0009.JPG -nt 24 -out 100_0024_0008.txt
-./deepmatching $PWD/resize_real/resize_100_0024_0009.JPG $PWD/resize_real/resize_100_0024_0010.JPG -nt 24 -out 100_0024_0009.txt
+# $1 is first argument -> dir
+# echo "./deepmatching $PWD/resize_$1/MAX_0001.JPG $PWD/resize_$1/MAX_0002.JPG -nt 24 -out $PWD/resize_$1/MAX_0001.txt"
 
-# ./deepmatching $PWD/resize_real/resize_MAX_0001.JPG $PWD/resize_real/resize_MAX_0002.JPG -nt 24 -out MAX_0001.txt
-# ./deepmatching $PWD/resize_real/resize_MAX_0002.JPG $PWD/resize_real/resize_MAX_0003.JPG -nt 24 -out MAX_0002.txt
-# ./deepmatching $PWD/resize_real/resize_MAX_0003.JPG $PWD/resize_real/resize_MAX_0004.JPG -nt 24 -out MAX_0003.txt
-# ./deepmatching $PWD/resize_real/resize_MAX_0004.JPG $PWD/resize_real/resize_MAX_0005.JPG -nt 24 -out MAX_0004.txt
-# ./deepmatching $PWD/resize_real/resize_MAX_0005.JPG $PWD/resize_real/resize_MAX_0006.JPG -nt 24 -out MAX_0005.txt
-# ./deepmatching $PWD/resize_real/resize_MAX_0006.JPG $PWD/resize_real/resize_MAX_0007.JPG -nt 24 -out MAX_0006.txt
-# ./deepmatching $PWD/resize_real/resize_MAX_0007.JPG $PWD/resize_real/resize_MAX_0008.JPG -nt 24 -out MAX_0007.txt
-# ./deepmatching $PWD/resize_real/resize_MAX_0008.JPG $PWD/resize_real/resize_MAX_0009.JPG -nt 24 -out MAX_0008.txt
-# ./deepmatching $PWD/resize_real/resize_MAX_0009.JPG $PWD/resize_real/resize_MAX_0010.JPG -nt 24 -out MAX_0009.txt
-# ./deepmatching $PWD/resize_real/resize_MAX_0010.JPG $PWD/resize_real/resize_MAX_0011.JPG -nt 24 -out MAX_0010.txt
+file_dir=$PWD/resize_$1
+file_list=("$file_dir"/*)
+list_length=${#file_list[@]}
+echo "$list_length"
 
-# ./deepmatching $PWD/resize_real/resize_578790.JPG $PWD/resize_real/resize_578791.JPG -nt 24 -out 578790.txt
-# ./deepmatching $PWD/resize_real/resize_578791.JPG $PWD/resize_real/resize_578792.JPG -nt 24 -out 578791.txt
-# ./deepmatching $PWD/resize_real/resize_578792.JPG $PWD/resize_real/resize_578793.JPG -nt 24 -out 578792.txt
-# ./deepmatching $PWD/resize_real/resize_578793.JPG $PWD/resize_real/resize_578794.JPG -nt 24 -out 578793.txt
-# ./deepmatching $PWD/resize_real/resize_578794.JPG $PWD/resize_real/resize_578795.JPG -nt 24 -out 578794.txt
-# ./deepmatching $PWD/resize_real/resize_578795.JPG $PWD/resize_real/resize_578796.JPG -nt 24 -out 578795.txt
-# ./deepmatching $PWD/resize_real/resize_578796.JPG $PWD/resize_real/resize_578797.JPG -nt 24 -out 578796.txt
-# ./deepmatching $PWD/resize_real/resize_578797.JPG $PWD/resize_real/resize_578798.JPG -nt 24 -out 578797.txt
-# ./deepmatching $PWD/resize_real/resize_578798.JPG $PWD/resize_real/resize_578799.JPG -nt 24 -out 578798.txt
-# ./deepmatching $PWD/resize_real/resize_578799.JPG $PWD/resize_real/resize_578800.JPG -nt 24 -out 578799.txt
-# ./deepmatching $PWD/resize_real/resize_578800.JPG $PWD/resize_real/resize_578801.JPG -nt 24 -out 578800.txt
-# ./deepmatching $PWD/resize_real/resize_578801.JPG $PWD/resize_real/resize_578802.JPG -nt 24 -out 578801.txt
-# ./deepmatching $PWD/resize_real/resize_578802.JPG $PWD/resize_real/resize_578803.JPG -nt 24 -out 578802.txt
-# ./deepmatching $PWD/resize_real/resize_578803.JPG $PWD/resize_real/resize_578804.JPG -nt 24 -out 578803.txt
-# ./deepmatching $PWD/resize_real/resize_578804.JPG $PWD/resize_real/resize_578805.JPG -nt 24 -out 578804.txt
-# ./deepmatching $PWD/resize_real/resize_578805.JPG $PWD/resize_real/resize_578806.JPG -nt 24 -out 578805.txt
-# ./deepmatching $PWD/resize_real/resize_578806.JPG $PWD/resize_real/resize_578807.JPG -nt 24 -out 578806.txt
-# ./deepmatching $PWD/resize_real/resize_578807.JPG $PWD/resize_real/resize_578808.JPG -nt 24 -out 578807.txt
-# ./deepmatching $PWD/resize_real/resize_578808.JPG $PWD/resize_real/resize_578809.JPG -nt 24 -out 578808.txt
-# ./deepmatching $PWD/test_result/resize_578809.JPG $PWD/test_result/resize_578810.JPG -nt 24 -out 578809.txt
+for ((i=0; i<$list_length-1; i++)); do
+    # echo "${file_list[i]}"
+    # echo "${file_list[i+1]}"
 
-# i*1
+    full_name=${file_list[i]##*/}
+    name=${full_name%.*}
+    output_text=$name".txt"
+    # echo "$full_name"
+    # echo "$name"
+    # echo "$output_text"
+
+
+    ./deepmatching ${file_list[i]} ${file_list[i+1]} -nt 24 -out $PWD/resize_$1/$output_text
+    # exit 0
+
+done
+
+
+# Calling file path from file directory was hard to bring second argument
+
+# for file in "$file_dir"/*; do
+#     # name_array=$(echo $file | tr "/" "\n")
+#     # for name in $name_array; do
+#     #     echo "$name"
+#     # done
+#     full_name=${file##*/}
+#     name=${full_name%.*}
+#     name_int=$((${name#*_}))
+#     # next=$name_int+1
+#     ext=${full_name##*.}
+
+#     
+#     echo "$name_int"
+#     # echo "$next"
+#     echo "$ext"
+
+# done
