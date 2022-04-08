@@ -47,7 +47,7 @@ void extract_image_desc( image_t* img0, image_t* img1, const dm_params_t* params
     image_crop(img0, size[0], size[1]);
     
     // extract gradient-based information
-    std::cout << "right before segmentation fault" << std::endl;
+    // std::cout << "right before segmentation fault" << std::endl;
     *desc0 = extract_desc( img0, &params->desc_params, params->n_thread );
     *desc1 = extract_desc( img1, &params->desc_params, params->n_thread );
 }
@@ -680,7 +680,7 @@ void set_default_dm_params( dm_params_t* params )
 float_image* deep_matching( image_t* img0, image_t* img1, const dm_params_t* params, full_corres_t* corres_out )
 {
   // std::cout << "default prior_img_downscale: " << params->prior_img_downscale << std::endl;
-  std::cout << "start deep matching" << std::endl;
+  std::cout << "deep_matching start" << std::endl;
   // verify parameters
   assert(between(0,params->prior_img_downscale,3));
   assert(between(0,params->overlap,999));
@@ -696,7 +696,7 @@ float_image* deep_matching( image_t* img0, image_t* img1, const dm_params_t* par
 
   // extract pixel descriptors
   float_layers *source, *target;
-  std::cout << "extract_image_desc has seg fault" << std::endl;
+  // std::cout << "extract_image_desc has seg fault" << std::endl;
   extract_image_desc( img0, img1, params, &source, &target );
   if( corres_out )  // the first image is rotated
     source = rotate45( source, params, corres_out );

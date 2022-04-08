@@ -65,7 +65,7 @@ float_layers* extract_desc( image_t* _img, const desc_params_t* params, int nt )
   
   UBYTE_image* img = image_to_arraytype(_img);  // could be optimized but well
   const int npix = img->tx*img->ty;
-  std::cout << "npix: " << npix << " img tx: " << img->tx << " img ty: " << img->ty << std::endl;
+  // std::cout << "npix: " << npix << " img tx: " << img->tx << " img ty: " << img->ty << std::endl;
   //hash_image(img)D(img->tx)D(img->ty)
   
   // pre-smooth image
@@ -95,7 +95,7 @@ float_layers* extract_desc( image_t* _img, const desc_params_t* params, int nt )
   assert( params->hog_sigmoid>=0 );
   if( params->hog_sigmoid ) {
     float_array hog_ravel = {hog->pixels,npix*hog->tz};
-    std::cout << "hog->pixels: " << *(hog->pixels) << " hog->tz: " << hog->tz << std::endl;
+    // std::cout << "hog->pixels: " << *(hog->pixels) << " hog->tz: " << hog->tz << std::endl;
     // std::cout << "inside sigmoid_array has seg fault" << std::endl;
     sigmoid_array( &hog_ravel, params->hog_sigmoid, 0, nt);
   }
