@@ -38,6 +38,7 @@ Created on 29.03.2018
 #include "minimal.h"
 #include "errorMeasure.h"
 #include <stdlib.h>
+#include <string.h>
 
 using Eigen::MatrixXd;
 using Eigen::Vector2d;
@@ -130,11 +131,19 @@ std::string getDateString();
  */
 std::string stringToFormat(const int number);
 
+/**
+ * Method to test some functions temporally.
+ */
+void testMode();
+
 // select desired method by uncommenting
-int main() {
+int main(int argc, char *argv[]) {
     // set constants in function!
     //evaluateParameterSweep();
 
+    if (strcmp(argv[1], "test") == 0) {
+        testMode();        
+    }
     // set constants in function!
     evaluateSingleRun();
 
@@ -145,6 +154,10 @@ int main() {
 // Method implementation
 // ------------------------------------------------------------------------------------------------------------------
 
+
+void testMode() {
+    std::cout << "TEST MODE ON" << std::endl;
+}
 
 void evaluateParameterSweep() {
     // structure of the test files:
