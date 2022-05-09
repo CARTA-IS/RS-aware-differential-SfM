@@ -281,7 +281,8 @@ public:
      * Method that relocates the first scan line of the first RS frame to T=(0,0,0) and R=(1,0,0;0,1,0;0,0,1).
      */
     void relocatePose();
-
+    
+    void getScanlines();
 
 private:
     int rows_;

@@ -34,6 +34,7 @@ Created on 29.03.2018
 #include <iomanip>
 #include "Eigen/Core"
 #include "camera.h"
+#include "rsframe.h"
 #include "nonlinearRefinement.h"
 #include "minimal.h"
 #include "errorMeasure.h"
@@ -143,9 +144,10 @@ int main(int argc, char *argv[]) {
 
     if (strcmp(argv[1], "test") == 0) {
         testMode();        
+    } else {
+        // set constants in function!
+        evaluateSingleRun();
     }
-    // set constants in function!
-    evaluateSingleRun();
 
     // testFlow(true);
     return 0;
@@ -157,6 +159,44 @@ int main(int argc, char *argv[]) {
 
 void testMode() {
     std::cout << "TEST MODE ON" << std::endl;
+
+    // std::string data_path = "../../examples/real_world/example/";
+    // Camera camera = setupCameraReal(data_path, "example");
+    // double gamma = 0.95;
+
+    std::string data_path = "../../examples/real_world/example/";
+    Camera camera = setupCameraReal(data_path, "example_resize");
+    double gamma = 0.95;
+
+    RsFrame f1 = camera.getFrame(1);
+    cv::Mat frame1 = f1.getRsImage();
+    // std::cout << frame1 << std::endl;
+    f1.getScanlines();
+    f1.relocatePose();
+    f1.getScanlines();
+
+    std::cout << frame1.rows << std::endl;
+    float u = 3.136604234527687;
+    float v = 190.66754885993484;
+    float d = 89.05753246052414;
+
+    // RsFrame f2 = camera.getFrame(2);
+    // cv::Mat frame2 = f2.getRsImage();
+    // f2.getScanlines();
+    // f2.relocatePose();
+    // f2.getScanlines();
+    // std::cout << frame2 << std::endl;
+
+    // cv::FileStorage fs("scan.xml", cv::FileStorage::WRITE);
+    // bool check = fs.isOpened();
+    // if (check) {
+    //     std::cout << "file opened successfully" << std::endl;
+    //     fs << "before" << frame1;
+    //     fs << "after" << frame2;
+    //     fs.release();
+    // }
+
+    // std::exit(0);
 }
 
 void evaluateParameterSweep() {
@@ -747,31 +787,31 @@ Camera setupCameraSynthetic(std::string data_prefix, bool show_messages) {
 // setup camera for real world images
 Camera setupCameraReal(std::string data_prefix, std::string intrinsic_selection) {
     // Frame 1
-    // std::string path_rs_image_1 = data_prefix + "frame1.png";
-    // std::string path_rs_image_1 = data_prefix + "frame1.JPG";
-    // Mat rs_image_1 = cv::imread(path_rs_image_1.c_str(), CV_LOAD_IMAGE_COLOR);
+    std::string path_rs_image_1 = data_prefix + "frame1.JPG";
+    // std::string path_rs_image_1 = data_prefix + "resize1.JPG";
+    Mat rs_image_1 = cv::imread(path_rs_image_1.c_str(), CV_LOAD_IMAGE_COLOR);
 
     // Frame 2
-    // std::string path_rs_image_2= data_prefix + "frame2.png";
-    // std::string path_rs_image_2= data_prefix + "frame2.JPG";
-    // Mat rs_image_2 = cv::imread(path_rs_image_2.c_str(), CV_LOAD_IMAGE_COLOR);
+    std::string path_rs_image_2= data_prefix + "frame2.JPG";
+    // std::string path_rs_image_2= data_prefix + "resize2.JPG";
+    Mat rs_image_2 = cv::imread(path_rs_image_2.c_str(), CV_LOAD_IMAGE_COLOR);
 
     // Resize version -- check denominator
-    std::string path_rs_image_1 = data_prefix + "frame1.JPG";
-    Mat original_image_1, resized_image_1;
-    original_image_1 = cv::imread(path_rs_image_1.c_str(), CV_LOAD_IMAGE_COLOR);
-    cv::resize(original_image_1, resized_image_1, cv::Size(original_image_1.cols/8, original_image_1.rows/8));
-    cv::imwrite(data_prefix + "resize1.JPG", resized_image_1);
-    std::string path_resize_image_1 = data_prefix + "resize1.JPG";
-    Mat rs_image_1 = cv::imread(path_resize_image_1, CV_LOAD_IMAGE_COLOR);
+    // std::string path_rs_image_1 = data_prefix + "frame1.JPG";
+    // Mat original_image_1, resized_image_1;
+    // original_image_1 = cv::imread(path_rs_image_1.c_str(), CV_LOAD_IMAGE_COLOR);
+    // cv::resize(original_image_1, resized_image_1, cv::Size(original_image_1.cols/8, original_image_1.rows/8));
+    // cv::imwrite(data_prefix + "resize1.JPG", resized_image_1);
+    // std::string path_resize_image_1 = data_prefix + "resize1.JPG";
+    // Mat rs_image_1 = cv::imread(path_resize_image_1, CV_LOAD_IMAGE_COLOR);
 
-    std::string path_rs_image_2= data_prefix + "frame2.JPG";
-    Mat original_image_2, resized_image_2;
-    original_image_2 = cv::imread(path_rs_image_2.c_str(), CV_LOAD_IMAGE_COLOR);
-    cv::resize(original_image_2, resized_image_2, cv::Size(original_image_2.cols/8, original_image_2.rows/8));
-    cv::imwrite(data_prefix + "resize2.JPG", resized_image_2);
-    std::string path_resize_image_2 = data_prefix + "resize2.JPG";
-    Mat rs_image_2 = cv::imread(path_resize_image_2, CV_LOAD_IMAGE_COLOR);
+    // std::string path_rs_image_2= data_prefix + "frame2.JPG";
+    // Mat original_image_2, resized_image_2;
+    // original_image_2 = cv::imread(path_rs_image_2.c_str(), CV_LOAD_IMAGE_COLOR);
+    // cv::resize(original_image_2, resized_image_2, cv::Size(original_image_2.cols/8, original_image_2.rows/8));
+    // cv::imwrite(data_prefix + "resize2.JPG", resized_image_2);
+    // std::string path_resize_image_2 = data_prefix + "resize2.JPG";
+    // Mat rs_image_2 = cv::imread(path_resize_image_2, CV_LOAD_IMAGE_COLOR);
 
     Camera camera;
     camera.setIntrinsics(intrinsic_selection);

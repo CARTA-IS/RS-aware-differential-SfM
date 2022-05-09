@@ -959,9 +959,17 @@ void RsFrame::relocatePose() {
 
     for (int i = 1; i < rows_; ++i) {
         tmp_pose = scanlines_[i].getTranslation();
+        // std::cout << tmp_pose << std::endl;
         scanlines_[i].setTranslation(tmp_pose - initial_pose);
+        // std::cout << scanlines_[i].getTranslation() << std::endl;
 
         tmp_orientation = scanlines_[i].getRotation();
+        // std::cout << tmp_orientation << std::endl;
         scanlines_[i].setRotation(initial_orientation.inverse() * tmp_orientation);
     }
+}
+
+void RsFrame::getScanlines() {
+    std::cout << scanlines_[450].getTranslation() << std::endl;
+    std::cout << scanlines_.size() << std::endl;
 }

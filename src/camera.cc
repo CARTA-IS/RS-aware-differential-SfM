@@ -219,6 +219,14 @@ void Camera::setIntrinsics(const std::string source_camera) {
         intrinsics << 533.3125, 0,  341.82,
                 0, 533.3125, 232.97125,
                 0, 0, 1;
+    } else if (source_camera == "example") { // geomdan_210803 intrinsic parameter's initial values
+        intrinsics << 3149.606, 0,  2000.000,
+                0, 3149.606, 1500.000,
+                0, 0, 1;
+    } else if (source_camera == "example_resize") { // geomdan_210803_resize intrinsic parameter's initial values
+        intrinsics << 1049.868, 0,  666.666,
+                0, 1049.868, 500.000,
+                0, 0, 1;
     } else {
         std::cerr << "No valid source camera specified";
     }

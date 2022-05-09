@@ -135,6 +135,8 @@ Eigen/Core
 /home/dhlee/meissa/RS-aware-differential-SfM/src/Eigen/Core
 camera.h
 /home/dhlee/meissa/RS-aware-differential-SfM/src/camera.h
+rsframe.h
+/home/dhlee/meissa/RS-aware-differential-SfM/src/rsframe.h
 nonlinearRefinement.h
 /home/dhlee/meissa/RS-aware-differential-SfM/src/nonlinearRefinement.h
 minimal.h
