@@ -41,7 +41,7 @@ def move_to_of(name, dir, numerator, denominator):
     else:
         print('Check if arguments are correctly inserted')
         sys.exit()
-
+        
     optical_flow = open(f'{path}/arrow_{name}/output_{name}.txt', "r")
 
     for img in img_list:
