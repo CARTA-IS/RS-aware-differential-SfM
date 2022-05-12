@@ -5,6 +5,7 @@ import argparse
 import fractions
 import numpy as np
 from PIL import Image
+from PIL.ExifTags import TAGS
 from matplotlib import pyplot as plt
 from scipy.ndimage.interpolation import shift
 
@@ -169,64 +170,113 @@ def shift_image(image_src, at):
     if (x > 0):
         left_pad = pad_vector(vector=image_src, how='left', depth=x_)
         image_trans = shifter(vect=left_pad, y=y, y_=y_)
-    elif (x < 0):
-        right_pad = pad_vector(vector=image_src, how='right', depth=x_)
-        image_trans = shifter(vect=right_pad, y=y, y_=y_)
+    elif (x < 0):shift_image
     else:
         image_trans = shifter(vect=image_src, y=y, y_=y_)
 
     return image_trans
 
-def translate_this(image_file, at, with_plot=False, gray_scale=False, displace_x=True):
+def translate_this(image_file, displacement, at, with_plot=False, gray_scale=False, displace_x=True):
     if len(at) != 2: return False
 
     image_src = read_this(image_file=image_file, gray_scale=gray_scale)
-    height, width, channels = image_src.shape
+    height, width, channels = image_src.shape 
 
     if not gray_scale:
         r_image, g_image, b_image = image_src[:, :, 0], image_src[:, :, 1], image_src[:, :, 2]
-        r_trans = shift_image(image_src=r_image, at=at)
-        g_trans = shift_image(image_src=g_image, at=at)
-        b_trans = shift_image(image_src=b_image, at=at)
+        # r_trans = shift_image(image_src=r_image, at=at)
+        # g_trans = shift_image(image_src=g_image, at=at)
+        # b_trans = shift_image(image_src=b_image, at=at)
+
+        r_trans = np.zeros(r_image.shape, dtype=np.uint8)
+        g_trans = np.zeros(g_image.shape, dtype=np.uint8)
+        b_trans = np.zeros(b_image.shape, dtype=np.uint8)
 
         if displace_x:
+            print('Shift X-axis')
+            # + is from left to right, - is from right to left
             for i in range(height):
-                r_trans[i] = shift(r_image[i,:], 1000)
-                g_trans[i] = shift(g_image[i,:], 1000)
-                b_trans[i] = shift(b_image[i,:], 1000)
-        
+                r_trans[i] = shift(r_image[i], displacement*i//height)
+                g_trans[i] = shift(g_image[i], displacement*i//height)
+                b_trans[i] = shift(b_image[i], displacement*i//height)
+            
+                # r_trans[i] = shift(r_image[i], 1000)
+                # b_trans[i] = shift(b_image[i], 1000)
+                # g_trans[i] = shift(g_image[i], 1000)
         else:
+            print('Shift Y-axis')
+            # + is from top to bottom, - is from bottom to top
             for i in range(width):
-                r_trans[:,i] = shift(r_image[:,i], 1000)
-                g_trans[:,i] = shift(g_image[:,i], 1000)
-                b_trans[:,i] = shift(b_image[:,i], 1000)
+                r_trans[:,i] = shift(r_image[:,i], displacement*i//height)
+                g_trans[:,i] = shift(g_image[:,i], displacement*i//height)
+                b_trans[:,i] = shift(b_image[:,i], displacement*i//height)
+
+                # r_trans[:,i] = shift(r_image[:,i], 1000)
+                # g_trans[:,i] = shift(g_image[:,i], 1000)
+                # b_trans[:,i] = shift(b_image[:,i], 1000)
+
 
         image_trans = np.dstack(tup=(r_trans, g_trans, b_trans))
+
         img = Image.fromarray(image_trans)
         img.save('test.png')
+
     else:
         image_trans = shift_image(image_src=image_src, at=at)
 
-    # if with_plot:
-    #     cmap_val = None if not gray_scale else 'gray'
-    #     fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(10, 20))
+    if with_plot:
+        # plot show original and translated image same. require fix
+        cmap_val = None if not gray_scale else 'gray'
+        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(10, 20))
 
-    #     ax1.axis("off")
-    #     ax1.title.set_text('Original')
+        ax1.axis("off")
+        ax1.title.set_text('Original')
 
-    #     ax2.axis("off")
-    #     ax2.title.set_text("Translated")
+        ax2.axis("off")
+        ax2.title.set_text("Translated")
 
-    #     ax1.imshow(image_src, cmap=cmap_val)
-    #     ax2.imshow(image_trans, cmap=cmap_val)
-    #     plt.show()
-    #     return True
-    # return image_trans
+        ax1.imshow(image_src, cmap=cmap_val)
+        ax2.imshow(image_trans, cmap=cmap_val)
+        
+        plt.show()
+        return True
+    return image_trans
 
 if __name__=='__main__':
     # move_to_of(args.name, args.dir, args.numerator, args.denominator)
-    path = '/home/dhlee/meissa/RS-aware-differential-SfM/examples/real_world/example/frame1.JPG'
+    path = '/home/dhlee/meissa/RS-aware-differential-SfM/examples/real_world/example/MAX_0008.JPG'
 
-    translate_this(image_file=path, at=(0, 0), with_plot=True, displace_x=False)
-    # translate_this(image_file=path, at=(60, 60), with_plot=True)
+    # image = Image.open(path)
+    
+    # info_dict = {
+    # "Filename": image.filename,
+    # "Image Size": image.size,
+    # "Image Height": image.height,
+    # "Image Width": image.width,
+    # "Image Format": image.format,
+    # "Image Mode": image.mode,
+    # "Image is Animated": getattr(image, "is_animated", False),
+    # "Frames in Image": getattr(image, "n_frames", 1)
+    # }
+
+    # for label,value in info_dict.items():
+    #     print(f"{label:25}: {value}")
+    
+    # exifdata = image.getexif()
+
+    # for tag_id in exifdata:
+    #     tag = TAGS.get(tag_id, tag_id)
+    #     data = exifdata.get(tag_id)
+    #     if isinstance(data, bytes):
+    #         data = data.decode()
+    #     print(f"{tag:25}: {data}")
+    # print(exifdata)
+
+    plot = translate_this(image_file=path, displacement=6.23, at=(0, 0), with_plot=True, displace_x=True)
+    # plot = translate_this(image_file=path, displacement=6.23, at=(0, 0), with_plot=True, displace_x=False)
+    # plot = translate_this(image_file=path, displacement=20, at=(0, 0), with_plot=True, displace_x=False)
+    
+    # if type(plot) is not bool:
+    #     img = Image.fromarray(image_trans)
+    #     img.save('test.png')
     
