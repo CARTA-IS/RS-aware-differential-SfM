@@ -181,7 +181,8 @@ def translate_this(image_file, displacement, at, with_plot=False, gray_scale=Fal
 
     image_src = read_this(image_file=image_file, gray_scale=gray_scale)
     height, width, channels = image_src.shape 
-
+    rows = height
+    
     if not gray_scale:
         r_image, g_image, b_image = image_src[:, :, 0], image_src[:, :, 1], image_src[:, :, 2]
         # r_trans = shift_image(image_src=r_image, at=at)
@@ -195,10 +196,10 @@ def translate_this(image_file, displacement, at, with_plot=False, gray_scale=Fal
         if displace_x:
             print('Shift X-axis')
             # + is from left to right, - is from right to left
-            for i in range(height):
-                r_trans[i] = shift(r_image[i], displacement*i//height)
-                g_trans[i] = shift(g_image[i], displacement*i//height)
-                b_trans[i] = shift(b_image[i], displacement*i//height)
+            for i in range(rows):
+                r_trans[i] = shift(r_image[i], int(displacement*i//rows))
+                g_trans[i] = shift(g_image[i], int(displacement*i//rows))
+                b_trans[i] = shift(b_image[i], int(displacement*i//rows))
             
                 # r_trans[i] = shift(r_image[i], 1000)
                 # b_trans[i] = shift(b_image[i], 1000)
@@ -206,15 +207,18 @@ def translate_this(image_file, displacement, at, with_plot=False, gray_scale=Fal
         else:
             print('Shift Y-axis')
             # + is from top to bottom, - is from bottom to top
-            for i in range(width):
-                r_trans[:,i] = shift(r_image[:,i], displacement*i//height)
-                g_trans[:,i] = shift(g_image[:,i], displacement*i//height)
-                b_trans[:,i] = shift(b_image[:,i], displacement*i//height)
+            for i in range(rows):
+                try:
+                    r_trans[i + int(displacement*i//rows)] = r_image[i]
+                    g_trans[i + int(displacement*i//rows)] = g_image[i]
+                    b_trans[i + int(displacement*i//rows)] = b_image[i]
 
-                # r_trans[:,i] = shift(r_image[:,i], 1000)
-                # g_trans[:,i] = shift(g_image[:,i], 1000)
-                # b_trans[:,i] = shift(b_image[:,i], 1000)
-
+                    # r_trans[:,i] = shift(r_image[:,i], 1000)
+                    # g_trans[:,i] = shift(g_image[:,i], 1000)
+                    # b_trans[:,i] = shift(b_image[:,i], 1000)
+                except IndexError:
+                    print('Y-axis shift finished')
+                    break
 
         image_trans = np.dstack(tup=(r_trans, g_trans, b_trans))
 
@@ -272,8 +276,8 @@ if __name__=='__main__':
     #     print(f"{tag:25}: {data}")
     # print(exifdata)
 
-    plot = translate_this(image_file=path, displacement=6.23, at=(0, 0), with_plot=True, displace_x=True)
-    # plot = translate_this(image_file=path, displacement=6.23, at=(0, 0), with_plot=True, displace_x=False)
+    # plot = translate_this(image_file=path, displacement=6.23, at=(0, 0), with_plot=True, displace_x=True)
+    plot = translate_this(image_file=path, displacement=6.23, at=(0, 0), with_plot=True, displace_x=False)
     # plot = translate_this(image_file=path, displacement=20, at=(0, 0), with_plot=True, displace_x=False)
     
     # if type(plot) is not bool:
