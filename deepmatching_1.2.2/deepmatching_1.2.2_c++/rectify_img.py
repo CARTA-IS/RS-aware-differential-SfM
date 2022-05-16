@@ -21,6 +21,7 @@ parser = argparse.ArgumentParser()
 #                     help='if you want resized img to be rectified is 1. if you want to rectify original img, then input the multiple as they were resized')
 args = parser.parse_args()
 path = '/home/dhlee/meissa/RS-aware-differential-SfM/deepmatching_1.2.2/deepmatching_1.2.2_c++'
+name = 'geomdan_210803'
 img_ext = '.JPG'
 txt_ext = '.txt'
 
@@ -67,7 +68,6 @@ def move_to_of(name, dir, numerator, denominator):
     
     optical_flow.close()
 
-# def move_by_scanline(name, dir, numerator, denominator):
 def displacement_x():
     path = '/home/dhlee/meissa/RS-aware-differential-SfM/examples/real_world/example/'
 
@@ -106,7 +106,6 @@ def displacement_x():
     img = Image.fromarray(two_d)
 
     img.save('test.png')
-
 
 def displacement_y():
     path = '/home/dhlee/meissa/RS-aware-differential-SfM/examples/real_world/example/'
@@ -175,6 +174,86 @@ def shift_image(image_src, at):
         image_trans = shifter(vect=image_src, y=y, y_=y_)
 
     return image_trans
+
+def read_meatadata(file, sensor):
+    image = Image.open(file)
+
+    info_dict = {
+    "Filename": image.filename,
+    "Image Size": image.size,
+    "Image Height": image.height,
+    "Image Width": image.width,
+    "Image Format": image.format,
+    "Image Mode": image.mode,
+    "Image is Animated": getattr(image, "is_animated", False),
+    "Frames in Image": getattr(image, "n_frames", 1)
+    }
+
+    # for label,value in info_dict.items():
+    #     print(f"{label:25}: {value}")
+    
+    height = info_dict["Image Height"]
+    width = info_dict["Image Width"]
+    sensor_width = sensor[0]
+    sensor_height = sensor[1]
+
+    exifdata = image.getexif()
+    
+    for tag_id in exifdata:
+        tag = TAGS.get(tag_id, tag_id)
+        data = exifdata.get(tag_id)
+        try:
+            if isinstance(data, bytes):
+                data = data.decode()
+        except UnicodeDecodeError:
+            continue
+        print(f"{tag:25}: {data}")
+        if tag == 'DateTime':
+            time = data
+        elif tag == 'FocalLength':
+            focal_length = data
+    print()
+    
+    focal_to_pixel = focal_length * width / sensor_width
+    print(focal_to_pixel)
+    return time, focal_to_pixel, sensor_width, sensor_height
+
+def matching_to_velocity(file1, file2, matching, sensor):
+    result = open(matching)
+    line = result.readline()
+
+    files = [file1, file2]
+    time = []
+    focal = []
+    s_w = []
+    s_h = []
+    
+    for file in files:
+        a, b, c, d = read_meatadata(file, sensor)
+        time.append(a)
+        focal.append(b)
+        s_w.append(c)
+        s_h.append(d)
+
+    if time[0].split(':')[3] == time[1].split(':')[3]:
+        t = int(time[1].split(':')[4]) -int(time[0].split(':')[4])
+    elif time[0].split(':')[3] < time[1].split(':')[3]:
+        t = int(time[1].split(':')[4]) + 60 -int(time[0].split(':')[4])
+
+    print(t)
+    # velocity = 
+
+    # return    
+
+def calculate_displacement_x(sensor_width, focal_length, image_width, readout_time, flight_height, drone_velocity):
+    field_of_view = sensor_width / focal_length
+    displace_x = (drone_velocity * readout_time * image_width) / (field_of_view * flight_height)
+    return (displace_x / 1000)
+
+def calculate_displacement_y(sensor_height, focal_length, image_height, readout_time, flight_height, drone_velocity):
+    field_of_view = sensor_height / focal_length
+    displace_y = (drone_velocity * readout_time * image_height) / (field_of_view * flight_height)
+    return (displace_y / 1000)
 
 def translate_this(image_file, displacement, at, with_plot=False, gray_scale=False, displace_x=True):
     if len(at) != 2: return False
@@ -249,38 +328,18 @@ def translate_this(image_file, displacement, at, with_plot=False, gray_scale=Fal
 if __name__=='__main__':
     # move_to_of(args.name, args.dir, args.numerator, args.denominator)
     path = '/home/dhlee/meissa/RS-aware-differential-SfM/examples/real_world/example/MAX_0008.JPG'
-
-    # image = Image.open(path)
+    path2 = '/home/dhlee/meissa/RS-aware-differential-SfM/examples/real_world/example/MAX_0009.JPG'
+    matching = '/home/dhlee/meissa/RS-aware-differential-SfM/deepmatching_1.2.2/deepmatching_1.2.2_c++/arrow_geomdan_210803/output_geomdan_210803.txt'
     
-    # info_dict = {
-    # "Filename": image.filename,
-    # "Image Size": image.size,
-    # "Image Height": image.height,
-    # "Image Width": image.width,
-    # "Image Format": image.format,
-    # "Image Mode": image.mode,
-    # "Image is Animated": getattr(image, "is_animated", False),
-    # "Frames in Image": getattr(image, "n_frames", 1)
-    # }
-
-    # for label,value in info_dict.items():
-    #     print(f"{label:25}: {value}")
-    
-    # exifdata = image.getexif()
-
-    # for tag_id in exifdata:
-    #     tag = TAGS.get(tag_id, tag_id)
-    #     data = exifdata.get(tag_id)
-    #     if isinstance(data, bytes):
-    #         data = data.decode()
-    #     print(f"{tag:25}: {data}")
-    # print(exifdata)
+    matching_to_velocity(path, path2, matching, (6.4, 4.8))
 
     # plot = translate_this(image_file=path, displacement=6.23, at=(0, 0), with_plot=True, displace_x=True)
-    plot = translate_this(image_file=path, displacement=6.23, at=(0, 0), with_plot=True, displace_x=False)
+    # plot = translate_this(image_file=path, displacement=6.23, at=(0, 0), with_plot=True, displace_x=False)
     # plot = translate_this(image_file=path, displacement=20, at=(0, 0), with_plot=True, displace_x=False)
     
     # if type(plot) is not bool:
     #     img = Image.fromarray(image_trans)
     #     img.save('test.png')
     
+    # print(calculate_displacement_x(6.4, 4.7, 4000, 30, 165.9, 0.6))
+    # print(calculate_displacement_y(4.8, 4.7, 3000, 30, 165.9, 12.5))
