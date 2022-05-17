@@ -175,7 +175,7 @@ def shift_image(image_src, at):
 
     return image_trans
 
-def read_meatadata(file, sensor):
+def read_fixed_metadata(file, sensor):
     image = Image.open(file)
 
     info_dict = {
@@ -192,8 +192,8 @@ def read_meatadata(file, sensor):
     # for label,value in info_dict.items():
     #     print(f"{label:25}: {value}")
     
-    height = info_dict["Image Height"]
-    width = info_dict["Image Width"]
+    image_width = info_dict["Image Width"]
+    image_height = info_dict["Image Height"]
     sensor_width = sensor[0]
     sensor_height = sensor[1]
 
@@ -208,56 +208,82 @@ def read_meatadata(file, sensor):
         except UnicodeDecodeError:
             continue
         print(f"{tag:25}: {data}")
-        if tag == 'DateTime':
-            time = data
-        elif tag == 'FocalLength':
+        if tag == 'FocalLength':
             focal_length = data
+        elif tag == 'GPSInfo':
+            altitude = data[6]
     print()
     
-    focal_to_pixel = focal_length * width / sensor_width
-    print(focal_to_pixel)
-    return time, focal_to_pixel, sensor_width, sensor_height
+    focal_pixel = focal_length * image_width / sensor_width
 
-def matching_to_velocity(file1, file2, matching, sensor):
+    return image_width, image_height, focal_length, focal_pixel, altitude
+
+def read_time(file):
+    image = Image.open(file)
+
+    exifdata = image.getexif()
+    
+    for tag_id in exifdata:
+        tag = TAGS.get(tag_id, tag_id)
+        data = exifdata.get(tag_id)
+        try:
+            if isinstance(data, bytes):
+                data = data.decode()
+        except UnicodeDecodeError:
+            continue
+        if tag == 'DateTime':
+            time = data
+    return time
+
+def matching_to_velocity(file1, file2, matching, focal_pixel, altitude):
     result = open(matching)
     line = result.readline()
+    x, y, angle = line.split()
 
     files = [file1, file2]
     time = []
-    focal = []
-    s_w = []
-    s_h = []
     
     for file in files:
-        a, b, c, d = read_meatadata(file, sensor)
+        a = read_time(file)
         time.append(a)
-        focal.append(b)
-        s_w.append(c)
-        s_h.append(d)
 
     if time[0].split(':')[3] == time[1].split(':')[3]:
         t = int(time[1].split(':')[4]) -int(time[0].split(':')[4])
     elif time[0].split(':')[3] < time[1].split(':')[3]:
         t = int(time[1].split(':')[4]) + 60 -int(time[0].split(':')[4])
 
-    print(t)
-    # velocity = 
+    # pixel matching was taken by 0.3 images, so need to be enlarged by 10/3
+    x = float(x)*10/3
+    y = float(y)*10/3
 
-    # return    
+    distance_x = (x * float(altitude)) / focal_pixel
+    distance_y = (y * float(altitude)) / focal_pixel
+    velocity_x = distance_x / t
+    velocity_y = distance_y / t
 
-def calculate_displacement_x(sensor_width, focal_length, image_width, readout_time, flight_height, drone_velocity):
+    print('altitude(m):', altitude)
+    print('matching(pix):', x, y, angle)
+    print('time(s):', t)
+    print('focal_pixel(pix):', focal_pixel)
+    print('distance(m):', distance_x, distance_y)
+    print('velocity(m/s):', velocity_x, velocity_y)
+    
+    return velocity_x, velocity_y
+
+def calculate_displacement_x(sensor_width, focal_length, image_width, readout_time, altitude, velocity):
     field_of_view = sensor_width / focal_length
-    displace_x = (drone_velocity * readout_time * image_width) / (field_of_view * flight_height)
+    displace_x = (velocity * readout_time * image_width) / (field_of_view * altitude)
     return (displace_x / 1000)
 
-def calculate_displacement_y(sensor_height, focal_length, image_height, readout_time, flight_height, drone_velocity):
+def calculate_displacement_y(sensor_height, focal_length, image_height, readout_time, altitude, velocity):
     field_of_view = sensor_height / focal_length
-    displace_y = (drone_velocity * readout_time * image_height) / (field_of_view * flight_height)
+    displace_y = (velocity * readout_time * image_height) / (field_of_view * altitude)
     return (displace_y / 1000)
 
 def translate_this(image_file, displacement, at, with_plot=False, gray_scale=False, displace_x=True):
     if len(at) != 2: return False
-
+    
+    name = image_file.split('/')[-1]
     image_src = read_this(image_file=image_file, gray_scale=gray_scale)
     height, width, channels = image_src.shape 
     rows = height
@@ -302,7 +328,7 @@ def translate_this(image_file, displacement, at, with_plot=False, gray_scale=Fal
         image_trans = np.dstack(tup=(r_trans, g_trans, b_trans))
 
         img = Image.fromarray(image_trans)
-        img.save('test.png')
+        img.save(f'test_{name}.png')
 
     else:
         image_trans = shift_image(image_src=image_src, at=at)
@@ -329,17 +355,23 @@ if __name__=='__main__':
     # move_to_of(args.name, args.dir, args.numerator, args.denominator)
     path = '/home/dhlee/meissa/RS-aware-differential-SfM/examples/real_world/example/MAX_0008.JPG'
     path2 = '/home/dhlee/meissa/RS-aware-differential-SfM/examples/real_world/example/MAX_0009.JPG'
-    matching = '/home/dhlee/meissa/RS-aware-differential-SfM/deepmatching_1.2.2/deepmatching_1.2.2_c++/arrow_geomdan_210803/output_geomdan_210803.txt'
-    
-    matching_to_velocity(path, path2, matching, (6.4, 4.8))
+    matching = '/home/dhlee/meissa/RS-aware-differential-SfM/deepmatching_1.2.2/deepmatching_1.2.2_c++/arrow_geomdan_210803/output_geomdan_210803.txt'    
+    sensor_width, sensor_height = 6.4, 4.8
+    readout_time = 30
 
-    # plot = translate_this(image_file=path, displacement=6.23, at=(0, 0), with_plot=True, displace_x=True)
-    # plot = translate_this(image_file=path, displacement=6.23, at=(0, 0), with_plot=True, displace_x=False)
-    # plot = translate_this(image_file=path, displacement=20, at=(0, 0), with_plot=True, displace_x=False)
+    image_width, image_height, focal_length, focal_pixel, altitude = read_fixed_metadata(path, (sensor_width, sensor_height))
+    velocity_x, velocity_y = matching_to_velocity(path, path2, matching, focal_pixel, altitude)
+
+    shift_x = calculate_displacement_x(sensor_width, focal_length, image_width, readout_time, altitude, velocity_x)
+    shift_y = calculate_displacement_y(sensor_height, focal_length, image_height, readout_time, altitude, velocity_y)
+    
+    # If the vertical pixel displacement is bigger than 2, it is recommended to apply the Rolling Shutter Optimization
+    if shift_x > 2:
+        translate_this(image_file=path, displacement=shift_x, at=(0, 0), with_plot=True, displace_x=True)
+    elif shift_y > 2:
+        translate_this(image_file=path, displacement=shift_y, at=(0, 0), with_plot=True, displace_x=False)
+
     
     # if type(plot) is not bool:
     #     img = Image.fromarray(image_trans)
     #     img.save('test.png')
-    
-    # print(calculate_displacement_x(6.4, 4.7, 4000, 30, 165.9, 0.6))
-    # print(calculate_displacement_y(4.8, 4.7, 3000, 30, 165.9, 12.5))
