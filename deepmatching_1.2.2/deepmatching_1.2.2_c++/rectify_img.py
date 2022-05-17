@@ -4,6 +4,7 @@ import sys
 import argparse
 import fractions
 import numpy as np
+import datetime
 from PIL import Image
 from PIL.ExifTags import TAGS
 from matplotlib import pyplot as plt
@@ -11,6 +12,10 @@ from scipy.ndimage.interpolation import shift
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument('-dataset', type=str, default="geomdan_210803", 
+                    help='choose dataset directory')
+parser.add_argument('-matching', type=str, default="/home/dhlee/meissa/RS-aware-differential-SfM/deepmatching_1.2.2/deepmatching_1.2.2_c++/arrow_geomdan_210803/output_geomdan_210803.txt", 
+                    help='choose deep matching result text file')
 # parser.add_argument('-name', type=str, default="name", 
 #                     help='resized img dir name for optical flow visualization')
 # parser.add_argument('-dir', type=str, default="dir", 
@@ -19,9 +24,9 @@ parser = argparse.ArgumentParser()
 #                     help='if you want resized img to be rectified is 1. if you want to rectify original img, then input the multiple as they were resized')
 # parser.add_argument('-denominator', type=int, required=True, 
 #                     help='if you want resized img to be rectified is 1. if you want to rectify original img, then input the multiple as they were resized')
+
 args = parser.parse_args()
-path = '/home/dhlee/meissa/RS-aware-differential-SfM/deepmatching_1.2.2/deepmatching_1.2.2_c++'
-name = 'geomdan_210803'
+# path = '/home/dhlee/meissa/RS-aware-differential-SfM/deepmatching_1.2.2/deepmatching_1.2.2_c++'
 img_ext = '.JPG'
 txt_ext = '.txt'
 
@@ -247,11 +252,18 @@ def matching_to_velocity(file1, file2, matching, focal_pixel, altitude):
         a = read_time(file)
         time.append(a)
 
-    if time[0].split(':')[3] == time[1].split(':')[3]:
-        t = int(time[1].split(':')[4]) -int(time[0].split(':')[4])
-    elif time[0].split(':')[3] < time[1].split(':')[3]:
-        t = int(time[1].split(':')[4]) + 60 -int(time[0].split(':')[4])
+    lhs_date = datetime.datetime.strptime(time[0], '%Y:%m:%d %H:%M:%S')
+    rhs_date = datetime.datetime.strptime(time[1], '%Y:%m:%d %H:%M:%S')
+    
+    t = int(rhs_date.timestamp() - lhs_date.timestamp())
 
+    # if time[0].split(':')[3] == time[1].split(':')[3]:
+    #     t = int(time[1].split(':')[4]) -int(time[0].split(':')[4])
+    # elif time[0].split(':')[3] < time[1].split(':')[3]:
+    #     t = int(time[1].split(':')[4]) + 60 -int(time[0].split(':')[4])
+    # else:
+    #     print('outlier case occured')
+    
     # pixel matching was taken by 0.3 images, so need to be enlarged by 10/3
     x = float(x)*10/3
     y = float(y)*10/3
@@ -326,9 +338,13 @@ def translate_this(image_file, displacement, at, with_plot=False, gray_scale=Fal
                     break
 
         image_trans = np.dstack(tup=(r_trans, g_trans, b_trans))
-
         img = Image.fromarray(image_trans)
-        img.save(f'test_{name}.png')
+
+        exist = os.path.exists(f'/home/dhlee/rolling_{args.dataset}')
+        if not exist:
+            os.makedirs(f'/home/dhlee/rolling_{args.dataset}')
+
+        img.save(f'/home/dhlee/rolling_{args.dataset}/{name}')
 
     else:
         image_trans = shift_image(image_src=image_src, at=at)
@@ -353,23 +369,27 @@ def translate_this(image_file, displacement, at, with_plot=False, gray_scale=Fal
 
 if __name__=='__main__':
     # move_to_of(args.name, args.dir, args.numerator, args.denominator)
-    path = '/home/dhlee/meissa/RS-aware-differential-SfM/examples/real_world/example/MAX_0008.JPG'
-    path2 = '/home/dhlee/meissa/RS-aware-differential-SfM/examples/real_world/example/MAX_0009.JPG'
-    matching = '/home/dhlee/meissa/RS-aware-differential-SfM/deepmatching_1.2.2/deepmatching_1.2.2_c++/arrow_geomdan_210803/output_geomdan_210803.txt'    
+    path = f'/home/dhlee/dataset/{args.dataset}/'
+    matching = f'{args.matching}'
+
+    file_list = os.listdir(f'{path}')
+    img_list = [img for img in file_list if img.endswith(img_ext)]
+    img_list.sort()
+
     sensor_width, sensor_height = 6.4, 4.8
     readout_time = 30
-
-    image_width, image_height, focal_length, focal_pixel, altitude = read_fixed_metadata(path, (sensor_width, sensor_height))
-    velocity_x, velocity_y = matching_to_velocity(path, path2, matching, focal_pixel, altitude)
-
-    shift_x = calculate_displacement_x(sensor_width, focal_length, image_width, readout_time, altitude, velocity_x)
-    shift_y = calculate_displacement_y(sensor_height, focal_length, image_height, readout_time, altitude, velocity_y)
+    image_width, image_height, focal_length, focal_pixel, altitude = read_fixed_metadata(path + img_list[0], (sensor_width, sensor_height))
     
-    # If the vertical pixel displacement is bigger than 2, it is recommended to apply the Rolling Shutter Optimization
-    if shift_x > 2:
-        translate_this(image_file=path, displacement=shift_x, at=(0, 0), with_plot=True, displace_x=True)
-    elif shift_y > 2:
-        translate_this(image_file=path, displacement=shift_y, at=(0, 0), with_plot=True, displace_x=False)
+    for i in range(len(img_list) - 1):
+        velocity_x, velocity_y = matching_to_velocity(path + img_list[i], path + img_list[i + 1], matching, focal_pixel, altitude)
+        shift_x = calculate_displacement_x(sensor_width, focal_length, image_width, readout_time, altitude, velocity_x)
+        shift_y = calculate_displacement_y(sensor_height, focal_length, image_height, readout_time, altitude, velocity_y)
+        
+        # If the vertical pixel displacement is bigger than 2, it is recommended to apply the Rolling Shutter Optimization
+        if shift_x > 2:
+            translate_this(image_file=path + img_list[i], displacement=shift_x, at=(0, 0), with_plot=False, displace_x=True)
+        elif shift_y > 2:
+            translate_this(image_file=path + img_list[i], displacement=shift_y, at=(0, 0), with_plot=False, displace_x=False)
 
     
     # if type(plot) is not bool:
