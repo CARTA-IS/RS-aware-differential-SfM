@@ -342,11 +342,11 @@ def translate_this(image_file, displacement, at, with_plot=False, gray_scale=Fal
         image_trans = np.dstack(tup=(r_trans, g_trans, b_trans))
         img = Image.fromarray(image_trans)
 
-        exist = os.path.exists(f'/home/dhlee/rolling_{args.dataset}')
+        exist = os.path.exists(f'/home/dhlee/dataset/rolling_{args.dataset}')
         if not exist:
-            os.makedirs(f'/home/dhlee/rolling_{args.dataset}')
+            os.makedirs(f'/home/dhlee/dataset/rolling_{args.dataset}')
 
-        img.save(f'/home/dhlee/rolling_{args.dataset}/{name}')
+        img.save(f'/home/dhlee/dataset/rolling_{args.dataset}/{name}')
         print(f'{name} saved')
 
     else:
@@ -398,10 +398,10 @@ if __name__=='__main__':
         else:
             print(f'{img_list[i]} no need shift: {shift_x} {shift_y}')
             img = Image.open(path + img_list[i])
-            img.save(f'/home/dhlee/rolling_{args.dataset}/{img_list[i]}')
-            
+            img.save(f'/home/dhlee/dataset/rolling_{args.dataset}/{img_list[i]}')
+
     img = Image.open(path + img_list[-1])
-    img.save(f'/home/dhlee/rolling_{args.dataset}/{img_list[-1]}')
+    img.save(f'/home/dhlee/dataset/rolling_{args.dataset}/{img_list[-1]}')
     print('image save finished')
     # if type(plot) is not bool:
     #     img = Image.fromarray(image_trans)
