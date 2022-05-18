@@ -256,29 +256,31 @@ def matching_to_velocity(file1, file2, matching, focal_pixel, altitude):
     rhs_date = datetime.datetime.strptime(time[1], '%Y:%m:%d %H:%M:%S')
     
     t = int(rhs_date.timestamp() - lhs_date.timestamp())
-
+    if t <= 0:
+        print(f'{files} have same time')
+        t = 3
     # if time[0].split(':')[3] == time[1].split(':')[3]:
     #     t = int(time[1].split(':')[4]) -int(time[0].split(':')[4])
     # elif time[0].split(':')[3] < time[1].split(':')[3]:
     #     t = int(time[1].split(':')[4]) + 60 -int(time[0].split(':')[4])
     # else:
     #     print('outlier case occured')
-    
+
     # pixel matching was taken by 0.3 images, so need to be enlarged by 10/3
     x = float(x)*10/3
     y = float(y)*10/3
-
+    
     distance_x = (x * float(altitude)) / focal_pixel
     distance_y = (y * float(altitude)) / focal_pixel
     velocity_x = distance_x / t
     velocity_y = distance_y / t
 
-    print('altitude(m):', altitude)
-    print('matching(pix):', x, y, angle)
-    print('time(s):', t)
-    print('focal_pixel(pix):', focal_pixel)
-    print('distance(m):', distance_x, distance_y)
-    print('velocity(m/s):', velocity_x, velocity_y)
+    # print('altitude(m):', altitude)
+    # print('matching(pix):', x, y, angle)
+    # print('time(s):', t)
+    # print('focal_pixel(pix):', focal_pixel)
+    # print('distance(m):', distance_x, distance_y)
+    # print('velocity(m/s):', velocity_x, velocity_y)
     
     return velocity_x, velocity_y
 
@@ -311,7 +313,7 @@ def translate_this(image_file, displacement, at, with_plot=False, gray_scale=Fal
         b_trans = np.zeros(b_image.shape, dtype=np.uint8)
 
         if displace_x:
-            print('Shift X-axis')
+            # print('Shift X-axis')
             # + is from left to right, - is from right to left
             for i in range(rows):
                 r_trans[i] = shift(r_image[i], int(displacement*i//rows))
@@ -322,7 +324,7 @@ def translate_this(image_file, displacement, at, with_plot=False, gray_scale=Fal
                 # b_trans[i] = shift(b_image[i], 1000)
                 # g_trans[i] = shift(g_image[i], 1000)
         else:
-            print('Shift Y-axis')
+            # print('Shift Y-axis')
             # + is from top to bottom, - is from bottom to top
             for i in range(rows):
                 try:
@@ -334,7 +336,7 @@ def translate_this(image_file, displacement, at, with_plot=False, gray_scale=Fal
                     # g_trans[:,i] = shift(g_image[:,i], 1000)
                     # b_trans[:,i] = shift(b_image[:,i], 1000)
                 except IndexError:
-                    print('Y-axis shift finished')
+                    # print('Y-axis shift finished')
                     break
 
         image_trans = np.dstack(tup=(r_trans, g_trans, b_trans))
@@ -345,6 +347,7 @@ def translate_this(image_file, displacement, at, with_plot=False, gray_scale=Fal
             os.makedirs(f'/home/dhlee/rolling_{args.dataset}')
 
         img.save(f'/home/dhlee/rolling_{args.dataset}/{name}')
+        print(f'{name} saved')
 
     else:
         image_trans = shift_image(image_src=image_src, at=at)
@@ -387,11 +390,19 @@ if __name__=='__main__':
         
         # If the vertical pixel displacement is bigger than 2, it is recommended to apply the Rolling Shutter Optimization
         if shift_x > 2:
+            print('x displacement:', shift_x)
             translate_this(image_file=path + img_list[i], displacement=shift_x, at=(0, 0), with_plot=False, displace_x=True)
         elif shift_y > 2:
+            print('y displacement:', shift_y)
             translate_this(image_file=path + img_list[i], displacement=shift_y, at=(0, 0), with_plot=False, displace_x=False)
-
-    
+        else:
+            print(f'{img_list[i]} no need shift: {shift_x} {shift_y}')
+            img = Image.open(path + img_list[i])
+            img.save(f'/home/dhlee/rolling_{args.dataset}/{img_list[i]}')
+            
+    img = Image.open(path + img_list[-1])
+    img.save(f'/home/dhlee/rolling_{args.dataset}/{img_list[-1]}')
+    print('image save finished')
     # if type(plot) is not bool:
     #     img = Image.fromarray(image_trans)
     #     img.save('test.png')
