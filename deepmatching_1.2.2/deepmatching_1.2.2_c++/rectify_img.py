@@ -29,6 +29,7 @@ args = parser.parse_args()
 # path = '/home/dhlee/meissa/RS-aware-differential-SfM/deepmatching_1.2.2/deepmatching_1.2.2_c++'
 img_ext = '.JPG'
 txt_ext = '.txt'
+record = open("record.txt", "w")
 
 def move_to_of(name, dir, numerator, denominator):
     is_original = False
@@ -212,12 +213,12 @@ def read_fixed_metadata(file, sensor):
                 data = data.decode()
         except UnicodeDecodeError:
             continue
-        print(f"{tag:25}: {data}")
+        # print(f"{tag:25}: {data}")
         if tag == 'FocalLength':
             focal_length = data
         elif tag == 'GPSInfo':
             altitude = data[6]
-    print()
+    # print()
     
     focal_pixel = focal_length * image_width / sensor_width
 
@@ -347,7 +348,9 @@ def translate_this(image_file, displacement, at, with_plot=False, gray_scale=Fal
             os.makedirs(f'/home/dhlee/dataset/rolling_{args.dataset}')
 
         img.save(f'/home/dhlee/dataset/rolling_{args.dataset}/{name}')
-        print(f'{name} saved')
+        # print(f'{name} saved')
+        record.write(f'{name} saved')
+        record.write('\n')
 
     else:
         image_trans = shift_image(image_src=image_src, at=at)
@@ -390,19 +393,26 @@ if __name__=='__main__':
         
         # If the vertical pixel displacement is bigger than 2, it is recommended to apply the Rolling Shutter Optimization
         if shift_x > 2:
-            print('x displacement:', shift_x)
+            # print('x displacement:', shift_x)
+            record.write(f'x displacement: {shift_x}')
+            record.write('\n')
             translate_this(image_file=path + img_list[i], displacement=shift_x, at=(0, 0), with_plot=False, displace_x=True)
         elif shift_y > 2:
-            print('y displacement:', shift_y)
+            # print('y displacement:', shift_y)
+            record.write(f'y displacement: {shift_y}')
+            record.write('\n')
             translate_this(image_file=path + img_list[i], displacement=shift_y, at=(0, 0), with_plot=False, displace_x=False)
         else:
-            print(f'{img_list[i]} no need shift: {shift_x} {shift_y}')
+            # print(f'{img_list[i]} no need shift: {shift_x} {shift_y}')
+            record.write(f'{img_list[i]} no need shift: {shift_x} {shift_y}')
+            record.write('\n')
             img = Image.open(path + img_list[i])
             img.save(f'/home/dhlee/dataset/rolling_{args.dataset}/{img_list[i]}')
 
     img = Image.open(path + img_list[-1])
     img.save(f'/home/dhlee/dataset/rolling_{args.dataset}/{img_list[-1]}')
     print('image save finished')
+    record.close()
     # if type(plot) is not bool:
     #     img = Image.fromarray(image_trans)
     #     img.save('test.png')
